@@ -1,0 +1,41 @@
+SECTION "vars", WRAM0
+sprites:   ds 256 ; Sprite page, currently only used to initialize OAM to all zeros
+level_map: ds 256 ; Level blocks
+actors:    ds 256 ; Actor information
+
+section "hram", HRAM[$FF80]
+run_dma:      ds 8 ; Copy of the OAM DMA routine in HRAM
+
+temp:        ds 16
+retraces:       db ; Frame count
+oam_ptr:        db
+
+PlayerPXL:      db
+PlayerPXH:      db
+PlayerPYL:      db
+PlayerPYH:      db
+PlayerVYL:      db
+PlayerVYH:      db
+PlayerPX:       db
+PlayerPY:       db
+PlayerDir:      db
+CameraX:        ds 2
+CameraPX:       ds 2
+CameraY:        ds 2
+CameraPY:       ds 2
+
+CursorX:        db ; X position of cursor, in cells
+CursorY:        db ; Y position of cursor, in cells
+MenuCursor:     db ; Y position of menu cursor
+MenuCount:      db ; number of menu options
+
+KeyDown:        db ; Keys pressed this frame
+KeyLast:        db ; Keys pressed last frame
+KeyNew:         db ; Keys pressed this frame that weren't last frame
+KeyRepeat:      db ; Timer for key repeat
+
+IsGameBoyColor: db ; $11 if Game Boy Color
+
+random1:        ds 2
+random2:        ds 2
+InitializedRandom: db ; Nonzero if random number generator has been seeded

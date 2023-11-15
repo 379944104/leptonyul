@@ -1,0 +1,107 @@
+; FHBG GB
+; Copyright (C) 2018 NovaSquirrel
+;
+; This program is free software: you can redistribute it and/or
+; modify it under the terms of the GNU General Public License as
+; published by the Free Software Foundation; either version 3 of the
+; License, or (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful, but
+; WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+; General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;
+
+INCLUDE "gbhw.inc" 
+INCLUDE "macros.inc" 
+INCLUDE "memory.z80"
+INCLUDE "header.z80"
+INCLUDE "misc.z80"
+INCLUDE "main.z80"
+INCLUDE "player.z80"
+INCLUDE "camera.z80"
+INCLUDE "metatile.z80"
+
+SECTION "init", ROM0[$0150]
+Init:
+  di				; Disable interrupts
+  ld   sp, $e000
+  push af ; save Game Boy Color flag
+  call ScreenOff
+; Clear lots of RAM
+  ld hl, $ff80
+  ld bc, 127
+  call memclear
+  ld hl, WRAM_START
+  ld bc, $1800
+  call memclear
+
+; Set palettes and clear the scroll
+  ld a, %00011100
+  ldh [rOBP0], a
+  ld a, %01101100
+  ldh [rOBP1], a
+  ldh [rBGP], a
+  xor a
+  ldh [rSCX], a
+  ldh [rSCY], a
+  ldh [$FF26], a ; turn off sound
+
+  pop af ; get Game Boy Color flag back
+  ldh [IsGameBoyColor], a
+  cp $11
+  call z, InitGameBoyColor
+
+; Copy in DMA routine
+  ld hl, oam_dma_routine
+  ld de, run_dma
+  ld c, oam_dma_routine_end - oam_dma_routine
+  call memcpy8
+
+; Upload graphics
+  ld hl, graphics
+  ld de, VRAM_LOW
+  ld bc, $1800
+  call memcpy
+; Clear the rest of VRAM
+  ld hl, VRAM_LOW+$1800
+  ld bc, $0800
+  call memclear
+  call ClearNametable
+  ld hl, SCREEN1+32*17+3+7
+  ld a, "a"
+  ld [hl+], a
+  ld [hl+], a
+  ld [hl+], a
+  ld a, "a"+128
+  ld [hl+], a
+  ld [hl+], a
+  ld [hl+], a
+
+; Initialize variables
+  xor a
+  ldh [InitializedRandom], a
+
+  call RenderLevel
+
+  call ScreenOn
+
+  ; Erase all initial sprites
+  call wait_vblank
+  ld a, sprites>>8
+  call run_dma
+
+  jp main_init
+
+; -----------------------------------------
+
+graphics:
+INCBIN "fhbg.chr"
+
+; --------------------------------------------
+SECTION "tokens", ROM0,ALIGN[8]
+
+TokenPointers:

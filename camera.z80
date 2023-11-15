@@ -1,0 +1,26 @@
+SECTION "camera", ROM0
+
+AdjustCamera:
+  ; Convert camera to pixel coordinates
+  ldh a, [CameraX+1]
+  ld b, a
+  ldh a, [CameraX+0]
+  rept 4
+    srl b
+    rra
+  endr
+  ldh [CameraPX+0], a
+  ld a, b
+  ldh [CameraPX+1], a
+
+  ldh a, [CameraY+1]
+  ld b, a
+  ldh a, [CameraY+0]
+  rept 4
+    srl b
+    rra
+  endr
+  ldh [CameraPY+0], a
+  ld a, b
+  ldh [CameraPY+1], a
+  ret

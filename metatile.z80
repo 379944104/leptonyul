@@ -1,0 +1,81 @@
+SECTION "metatiles", ROM0
+Metatiles:
+  ; empty
+  db "    "
+  ; solid block
+  db $d2, $d3, $e2, $e3
+  ; checker block
+  db $d4, $d6, $f4, $f6
+  ; ladder
+  db $f7, $f8, $f7, $f8
+  ; spring unpressed
+  db "  ", $b4, $b5
+  ; spring pressed
+  db "  ", $c4, $c5
+  ; solid platform
+  db $d7, $d9, "  "
+  ; fallthrough platform
+  db $e7, $e9, "  "
+
+RenderLevel:
+
+
+  ld hl, level_map
+.fill_loop:
+  call get_random_number
+  and 3
+  ld [hl], a
+  inc l
+  jr nz, .fill_loop
+
+
+
+  ld bc, level_map
+  ld de, SCREEN1
+.loop:
+  ; get tile
+  ld a, [bc]
+  add a
+  add a
+
+  ld hl, Metatiles
+  add_hl_a
+  ld a, [hl+]
+  ld [de], a
+  inc de
+
+  ld a, [hl+]
+  ld [de], a
+  ld a, e
+  add 31
+  ld e, a
+  
+  ld a, [hl+]
+  ld [de], a
+  inc de
+
+  ld a, [hl]
+  ld [de], a
+  ld a, e
+  sub 31
+  ld e, a
+
+  ; next block
+  inc c
+  jr z, .exit
+
+  ; next row of blocks?
+  ld a, c
+  and $0f
+  jr nz, .loop
+
+  ; next row, move DE down
+  ld hl, 32
+  add hl, de
+  ld d, h
+  ld e, l
+  
+  jr .loop
+.exit:
+  ret
+

@@ -1,0 +1,244 @@
+SECTION "player", ROM0
+
+RunPlayer:
+  ; React to key inputs
+  ldh a, [KeyDown]
+  ld b, a
+
+  bit 7, b
+  jr z, .NotDown
+  ldh a, [PlayerPYL]
+  add 16
+  ldh [PlayerPYL], a
+  ldh a, [PlayerPYH]
+  adc 0
+  ldh [PlayerPYH], a
+.NotDown:
+
+  bit 6, b
+  jr z, .NotUp
+  ldh a, [PlayerPYL]
+  sub 16
+  ldh [PlayerPYL], a
+  ldh a, [PlayerPYH]
+  sbc 0
+  ldh [PlayerPYH], a
+.NotUp:
+
+  bit 5, b
+  jr z, .NotLeft
+  ldh a, [PlayerPXL]
+  sub 16
+  ldh [PlayerPXL], a
+  ldh a, [PlayerPXH]
+  sbc 0
+  ldh [PlayerPXH], a
+
+  ld a, 1
+  ldh [PlayerDir], a
+.NotLeft:
+
+  bit 4, b
+  jr z, .NotRight
+  ldh a, [PlayerPXL]
+  add 16
+  ldh [PlayerPXL], a
+  ldh a, [PlayerPXH]
+  adc 0
+  ldh [PlayerPXH], a
+
+  xor a
+  ldh [PlayerDir], a
+.NotRight:
+
+
+  ; Increase gravity
+  ldh a, [PlayerVYL]
+  ld c, a
+  add 4
+  ldh [PlayerVYL], a
+  ldh a, [PlayerVYH]
+  ld b, a
+  adc 0
+  ldh [PlayerVYH], a
+
+  ; Limit the speed
+  ld a, b
+  and 128
+  jr nz, .GoingUp
+  ld a, c
+  cp $60
+  blt .GoingUp
+  ; Correct it
+  ld a, $60
+  ldh [PlayerVYL], a
+.GoingUp:
+
+  ; Apply gravity
+  ldh a, [PlayerPYL]
+  add c
+  ldh [PlayerPYL], a
+  ldh a, [PlayerPYH]
+  adc b
+  ldh [PlayerPYH], a
+
+
+DrawPlayer:
+  ld h, high(sprites)
+  ldh a, [oam_ptr]
+  ld l, a
+
+  ; Convert X and Y positions
+  ldh a, [CameraPX]
+  ld c, a
+  ldh a, [PlayerPXH]
+  ld b, a
+  ldh a, [PlayerPXL]
+  rept 4
+    srl b
+    rra
+  endr
+  ldh [PlayerPX], a
+  add 8
+  sub c
+  ld d, a
+
+  ldh a, [CameraPY]
+  ld c, a
+  ldh a, [PlayerPYH]
+  ld b, a
+  ldh a, [PlayerPYL]
+  rept 4
+    srl b
+    rra
+  endr
+  ldh [PlayerPY], a
+  add 16
+  sub c
+  ld e, a
+
+  ; Write a default tile list
+  xor a
+  ldh [temp+0], a
+  inc a
+  ldh [temp+1], a
+  inc a
+  ldh [temp+2], a
+  inc a
+  ldh [temp+3], a
+  inc a
+  ldh [temp+4], a
+  inc a
+  ldh [temp+5], a
+
+  ; Animate walking
+  ldh a, [KeyDown]
+  and KEY_LEFT | KEY_RIGHT
+  jr z, .NoWalking
+
+  push hl
+  ldh a, [retraces]
+  srl a
+  srl a
+  and %110
+  ld hl, WalkLegAnim
+  add_hl_a
+  ld a, [hl+]
+  ldh [temp+4], a
+  ld a, [hl]
+  ldh [temp+5], a
+  pop hl
+.NoWalking:
+
+  ; If facing left, swap
+  ld b, 0
+  ldh a, [PlayerDir]
+  or a
+  jr z, .NoFlip
+  ld b, OAM_XFLIP
+  ld a, 0
+  hswap [temp+0], [temp+1]
+  hswap [temp+2], [temp+3]
+  hswap [temp+4], [temp+5]
+.NoFlip:
+
+; --------------------------------
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ldh a, [temp+0]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  add a, 8
+  ld [hl+], a ; X position
+  ldh a, [temp+1]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld e, a
+
+; --------------------------------
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ldh a, [temp+2]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  add a, 8
+  ld [hl+], a ; X position
+  ldh a, [temp+3]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld e, a
+
+; --------------------------------
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ldh a, [temp+4]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  add a, 8
+  ld [hl+], a ; X position
+  ldh a, [temp+5]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+; --------------------------------
+  ld a, l
+  ldh [oam_ptr], a
+
+  ret
+
+WalkLegAnim:
+  db 4, 5
+  db 6, 5
+  db 4, 5
+  db 4, 7

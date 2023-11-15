@@ -1,0 +1,21 @@
+SECTION "main", ROM0
+
+main_init:
+
+main_loop:
+  ; Do graphical updates
+  call wait_vblank
+  ld a, sprites>>8
+  call run_dma
+  ldh a, [CameraPX]
+  ldh [rSCX], a
+  ldh a, [CameraPY]
+  ldh [rSCY], a
+
+  ; Run game loop stuff
+  call readkeys
+  xor a
+  ldh [oam_ptr], a
+  call RunPlayer
+
+  jp main_loop
