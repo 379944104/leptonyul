@@ -23,3 +23,24 @@ ENDM
 add_hl_a: MACRO
 	rst $08
 ENDM
+
+enum_start: MACRO
+	IF _NARG == 0
+		enum_set 0
+	ELSE
+		enum_set \1
+	ENDC
+ENDM
+
+enum_set: MACRO
+enum_value = \1
+ENDM
+
+enum_skip: MACRO
+	enum_set (enum_value + 1)
+ENDM
+
+enum_elem: MACRO
+\1 = enum_value
+	enum_skip
+ENDM

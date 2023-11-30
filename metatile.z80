@@ -1,25 +1,133 @@
 SECTION "metatiles", ROM0
+
+  enum_start
+  enum_elem BLOCK_EMPTY
+  enum_elem BLOCK_SOLID
+  enum_elem BLOCK_GRASS
+  enum_elem BLOCK_LADDER
+  enum_elem BLOCK_SPRING
+  enum_elem BLOCK_PRESSED_SPRING
+  enum_elem BLOCK_LOCK
+  enum_elem BLOCK_PLATFORM
+  enum_elem BLOCK_PLATFORM_L
+  enum_elem BLOCK_PLATFORM_R
+  enum_elem BLOCK_PLATFORM_LR
+  enum_elem BLOCK_FALL_PLATFORM
+  enum_elem BLOCK_FALL_PLATFORM_L
+  enum_elem BLOCK_FALL_PLATFORM_R
+  enum_elem BLOCK_FALL_PLATFORM_LR
+  enum_elem BLOCK_CHECKER
+  enum_elem BLOCK_CHECKER_D
+  enum_elem BLOCK_CHECKER_U
+  enum_elem BLOCK_CHECKER_UD
+  enum_elem BLOCK_CHECKER_R
+  enum_elem BLOCK_CHECKER_RD
+  enum_elem BLOCK_CHECKER_RU
+  enum_elem BLOCK_CHECKER_RUD
+  enum_elem BLOCK_CHECKER_L
+  enum_elem BLOCK_CHECKER_LD
+  enum_elem BLOCK_CHECKER_LU
+  enum_elem BLOCK_CHECKER_LUD
+  enum_elem BLOCK_CHECKER_LR
+  enum_elem BLOCK_CHECKER_LRD
+  enum_elem BLOCK_CHECKER_LRU
+  enum_elem BLOCK_CHECKER_LRUD
+
 Metatiles:
   ; empty
   db "    "
   ; solid block
   db $d2, $d3, $e2, $e3
-  ; checker block
-  db $d4, $d6, $f4, $f6
+  ; grass block
+  db $f0, $f2, $e0, $e1
   ; ladder
   db $f7, $f8, $f7, $f8
   ; spring unpressed
   db "  ", $b4, $b5
   ; spring pressed
   db "  ", $c4, $c5
+  ; lock
+  db $b6, $b7, $c6, $c7
   ; solid platform
   db $d7, $d9, "  "
+  db $d8, $d9, "  " ;l
+  db $d7, $d8, "  " ;r
+  db $d8, $d8, "  " ;lr
   ; fallthrough platform
   db $e7, $e9, "  "
+  db $e8, $e9, "  " ;l
+  db $e7, $e8, "  " ;r
+  db $e8, $e8, "  " ;lr
+  ; checker block
+  db $d4, $d6, $f4, $f6 ; ....
+  db $d4, $d6, $e4, $e6 ; ...d
+  db $e4, $e6, $f4, $f6 ; ..u.
+  db $e4, $e6, $e4, $e6 ; ..ud
+  db $d4, $d5, $f4, $f5 ; .r..
+  db $d4, $d5, $e4, $e5 ; .r.d
+  db $e4, $e5, $f4, $f5 ; .ru.
+  db $e4, $e5, $e4, $e5 ; .rud
+  db $d5, $d6, $f5, $f6 ; l...
+  db $d5, $d6, $e5, $e6 ; l..d
+  db $e5, $e6, $f5, $f6 ; l.u.
+  db $e5, $e6, $e5, $e6 ; l.ud
+  db $d5, $d5, $f5, $f5 ; lr..
+  db $e5, $e5, $f5, $f5 ; lr.d
+  db $d5, $d5, $e5, $e5 ; lru.
+  db $e5, $e5, $e5, $e5 ; lrud
+
+
+IsChecker:
+  ld a, [hl]
+  cp BLOCK_CHECKER
+  blt .no
+  cp BLOCK_CHECKER_LRUD+1
+  bge .no
+  ; shift in a 1
+  scf
+  rl b
+  ret
+.no:
+  ; shift in a 0
+  sla b
+  ret
+
+ApplyAutotile:
+  ld hl, level_map
+.loop:
+  ld a, [hl]
+  cp BLOCK_CHECKER
+  jr nz, .no
+  ; Figure out which checker block to use
+  ld b, 0
+  push hl
+    ; Left
+    dec l
+    call IsChecker
+    ; Right
+    inc l
+    inc l
+    call IsChecker
+    ; Up
+    ld a, l
+    sub 17
+    ld l, a
+    call IsChecker
+    ; Down
+    ld a, l
+    add 32
+    ld l, a
+    call IsChecker
+  pop hl
+  ld a, BLOCK_CHECKER
+  add b
+  ld [hl], a
+.no:
+  inc l
+  jr nz .loop
+  ret
 
 RenderLevel:
-
-
   ld hl, level_map
 .fill_loop:
   call get_random_number
@@ -42,7 +150,7 @@ RenderLevel:
   add_hl_a
   ld a, [hl+]
   ld [de], a
-  inc de
+  inc e
 
   ld a, [hl+]
   ld [de], a
@@ -52,7 +160,7 @@ RenderLevel:
   
   ld a, [hl+]
   ld [de], a
-  inc de
+  inc e
 
   ld a, [hl]
   ld [de], a

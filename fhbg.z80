@@ -29,7 +29,7 @@ SECTION "init", ROM0[$0150]
 Init:
   di				; Disable interrupts
   ld   sp, $e000
-  push af ; save Game Boy Color flag
+  ld e, a ; save Game Boy Color flag. E is unmodified by ScreenOff and memclear
   call ScreenOff
 ; Clear lots of RAM
   ld hl, $ff80
@@ -38,6 +38,11 @@ Init:
   ld hl, WRAM_START
   ld bc, $1800
   call memclear
+
+  ld a, e ; get Game Boy Color flag back
+  ldh [IsGameBoyColor], a
+  cp $11
+  call z, InitGameBoyColor
 
 ; Set palettes and clear the scroll
   ld a, %00011100
@@ -49,11 +54,6 @@ Init:
   ldh [rSCX], a
   ldh [rSCY], a
   ldh [$FF26], a ; turn off sound
-
-  pop af ; get Game Boy Color flag back
-  ldh [IsGameBoyColor], a
-  cp $11
-  call z, InitGameBoyColor
 
 ; Copy in DMA routine
   ld hl, oam_dma_routine
@@ -70,16 +70,7 @@ Init:
   ld hl, VRAM_LOW+$1800
   ld bc, $0800
   call memclear
-  call ClearNametable
-  ld hl, SCREEN1+32*17+3+7
-  ld a, "a"
-  ld [hl+], a
-  ld [hl+], a
-  ld [hl+], a
-  ld a, "a"+128
-  ld [hl+], a
-  ld [hl+], a
-  ld [hl+], a
+;  call ClearNametable
 
 ; Initialize variables
   xor a
