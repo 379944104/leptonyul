@@ -1,0 +1,226 @@
+SECTION "levels", ROM0
+
+; 16-bit number indicating what columns are enemy spawn points
+
+; 0n yx    - single block
+; 00 yx    - finished, position is player spawn point
+; 01 yx    - checker
+; 02 yx    - solid
+; 03 yx    - dirt
+; 04 yx    - platform
+; 05 yx    - fall platform
+; 06 yx    - ladder
+; 07 yx    - fence
+; 08 yx    - grass
+; 09 yx    - flower
+; 0a yx    - spring
+; 0b yx    - lock
+; 0c       -
+; 0d       -
+; 0e       -
+; 0f       -
+
+; 1n yx hw - rectangle fill (uses same list as single block)
+
+; 2n yx    - checker vertical
+; 3n yx    - solid vertical
+; 4n yx    - ladder vert
+
+; 5n yx    - checker horiz
+; 6n yx    - solid horiz
+; 7n yx    - platform horiz
+; 8n yx    - fall platform horiz
+; 9n yx    - fence horiz
+; An yx    - grass horiz
+; Bn yx    - flowers horiz
+; Cn       -
+; Dn       -
+; En       -
+; Fn       -
+
+LVL_DONE      = $00 ; single blocks
+LVL_EMPTY     = $00
+LVL_CHECKER   = $01
+LVL_SOLID     = $02
+LVL_DIRT      = $03
+LVL_PLAT      = $04
+LVL_FPLAT     = $05
+LVL_LADDER    = $06
+LVL_FENCE     = $07
+LVL_GRASS     = $08
+LVL_FLOWER    = $09
+LVL_SPRING    = $0a
+LVL_LOCK      = $0b
+
+LVL_RECT      = $10 ; OR with the above list
+
+LVL_V_CHECKER = $20
+LVL_V_SOLID   = $30
+LVL_V_LADDER  = $40
+
+LVL_H_CHECKER = $50
+LVL_H_SOLID   = $60
+LVL_H_PLAT    = $70
+LVL_H_FPLAT   = $80
+LVL_H_FENCE   = $90
+LVL_H_GRASS   = $A0
+LVL_H_FLOWER  = $B0
+
+SingleBlockList: ; for 0x and 1x
+  db BLOCK_EMPTY,    BLOCK_CHECKER,       BLOCK_SOLID,  BLOCK_DIRT
+  db BLOCK_PLATFORM, BLOCK_FALL_PLATFORM, BLOCK_LADDER, BLOCK_FENCE
+  db BLOCK_GRASS,    BLOCK_FLOWER1,       BLOCK_SPRING, BLOCK_LOCK
+
+MultiBlockList: ; for all other commands
+; vert
+  db BLOCK_CHECKER, BLOCK_SOLID, BLOCK_LADDER
+; horiz
+  db BLOCK_CHECKER, BLOCK_SOLID, BLOCK_PLATFORM, BLOCK_FALL_PLATFORM
+  db BLOCK_FENCE,   BLOCK_GRASS, BLOCK_FLOWER1
+
+LoadLevel:
+  ld de, sample_map
+  call DecompressMap
+  ret
+
+sample_map:
+  db LVL_V_LADDER|3,  $02
+  db LVL_H_CHECKER|3, $42
+  db LVL_H_CHECKER|1, $55
+  db LVL_H_CHECKER|1, $66
+  db LVL_H_CHECKER|1, $77
+  db LVL_H_CHECKER|1, $88
+  db LVL_H_CHECKER|1, $60
+  db $00, $00
+
+;  db LVL_SPRING, $22
+;  db LVL_H_CHECKER|5, $55
+;  db LVL_V_CHECKER|5, $55
+;  db LVL_H_CHECKER|5, $a5
+;  db LVL_V_CHECKER|5, $5a
+;  db LVL_RECT|LVL_SOLID, $14, $33
+;  db $00, $00
+
+DecompressMap:
+  ; Read type
+  ld a, [de]
+  inc de
+  ldh [temp+0], a
+  ; Read position
+  ld a, [de]
+  inc de
+  ldh [temp+1], a
+
+  ; HL = pointer to level data
+  ld l, a
+  ld h, level_map>>8
+
+  push de
+  ; Get high byte of command
+  ld a, [temp+0]
+  or a
+  jr z, .exit
+  swap a
+  and 15
+  jr z, .single
+  dec a
+  jr z, .rectangle
+  dec a
+  cp 3
+  bge .horiz
+
+.vert:
+  call .get_multi_count
+  call .get_multi_block_list
+  ld de, 16
+.vertloop:
+  ld [hl], a
+  add hl, de
+  dec c
+  jr nz, .vertloop
+  jr .done
+; ----------------------------------
+.horiz:
+  call .get_multi_count
+  call .get_multi_block_list
+.horizloop:
+  ld [hl+], a
+  dec c
+  jr nz, .horizloop
+  jr .done
+; ----------------------------------
+.rectangle:
+  pop de
+  ; Get height
+  ld a, [de]
+  and 15
+  inc a
+  ld b, a
+  ; Get width
+  ld a, [de]
+  swap a
+  and 15
+  inc a
+  ld c, a
+
+  ; Update level pointer
+  inc de
+  push de
+  call .get_single_block_list
+.rectloop_row:
+  push hl
+  ld d, c
+.rectloop:
+  ld [hl+], a
+  dec d
+  jr nz, .rectloop
+  pop hl
+  ; Move down a row
+  ld de, 16
+  add hl, de
+  dec b
+  jr nz, .rectloop_row
+
+  jr .done
+; ----------------------------------
+.single:
+  call .get_single_block_list
+  ld [hl], a
+  ; falls into .done
+.done:
+  pop de
+  jp DecompressMap
+
+.exit:
+  pop de
+  ret
+
+.get_multi_count:
+  ldh a, [temp]
+  and 15
+  ld c, a
+  inc c
+  ret
+
+; A = block to use (single or fill)
+.get_single_block_list:
+  push hl
+  ld hl, SingleBlockList
+  ldh a, [temp+0]
+  and 15
+  add_hl_a
+  ld a, [hl]
+  pop hl
+  ret
+
+; A = block to use
+.get_multi_block_list:
+  push hl
+  ld hl, MultiBlockList-2 ; add the 2 back
+  ldh a, [temp+0]
+  swap a
+  and 15
+  add_hl_a  
+  ld a, [hl]
+  pop hl
+  ret

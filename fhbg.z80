@@ -24,6 +24,7 @@ INCLUDE "main.z80"
 INCLUDE "player.z80"
 INCLUDE "camera.z80"
 INCLUDE "metatile.z80"
+INCLUDE "levels.z80"
 
 SECTION "init", ROM0[$0150]
 Init:

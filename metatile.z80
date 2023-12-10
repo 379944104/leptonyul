@@ -3,11 +3,17 @@ SECTION "metatiles", ROM0
   enum_start
   enum_elem BLOCK_EMPTY
   enum_elem BLOCK_SOLID
-  enum_elem BLOCK_GRASS
+  enum_elem BLOCK_DIRT
   enum_elem BLOCK_LADDER
   enum_elem BLOCK_SPRING
   enum_elem BLOCK_PRESSED_SPRING
   enum_elem BLOCK_LOCK
+
+  enum_elem BLOCK_FENCE
+  enum_elem BLOCK_GRASS
+  enum_elem BLOCK_FLOWER1
+  enum_elem BLOCK_FLOWER2
+
   enum_elem BLOCK_PLATFORM
   enum_elem BLOCK_PLATFORM_L
   enum_elem BLOCK_PLATFORM_R
@@ -48,6 +54,16 @@ Metatiles:
   db "  ", $c4, $c5
   ; lock
   db $b6, $b7, $c6, $c7
+
+  ; fence
+  db $b8, $b9, $e8, $e9
+  ; grass
+  db "  ", $ba, $bb
+  ; flower 1
+  db $bc, $bd, $ca, $cb
+  ; flower 2
+  db $cc, $cd, $ca, $cb
+
   ; solid platform
   db $d7, $d9, "  "
   db $d8, $d9, "  " ;l
@@ -72,8 +88,8 @@ Metatiles:
   db $e5, $e6, $f5, $f6 ; l.u.
   db $e5, $e6, $e5, $e6 ; l.ud
   db $d5, $d5, $f5, $f5 ; lr..
-  db $e5, $e5, $f5, $f5 ; lr.d
-  db $d5, $d5, $e5, $e5 ; lru.
+  db $d5, $d5, $e5, $e5 ; lr.d
+  db $e5, $e5, $f5, $f5 ; lru.
   db $e5, $e5, $e5, $e5 ; lrud
 
 
@@ -124,18 +140,22 @@ ApplyAutotile:
   ld [hl], a
 .no:
   inc l
-  jr nz .loop
+  jr nz, .loop
   ret
 
 RenderLevel:
-  ld hl, level_map
-.fill_loop:
-  call get_random_number
-  and 3
-  ld [hl], a
-  inc l
-  jr nz, .fill_loop
+;  ld hl, level_map
+;.fill_loop:
+;  call get_random_number
+;  and 1
+;  add BLOCK_FALL_PLATFORM_LR
+;  ld [hl], a
+;  inc l
+;  jr nz, .fill_loop
 
+  call LoadLevel
+
+  call ApplyAutotile
 
 
   ld bc, level_map
