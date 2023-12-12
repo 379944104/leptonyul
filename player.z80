@@ -51,7 +51,6 @@ RunPlayer:
   ldh [PlayerDir], a
 .NotRight:
 
-
   ; Increase gravity
   ldh a, [PlayerVYL]
   ld c, a
@@ -82,6 +81,7 @@ RunPlayer:
   adc b
   ldh [PlayerPYH], a
 
+  call PlayerLevelCollision
 
 DrawPlayer:
   ld h, high(sprites)
@@ -234,7 +234,6 @@ DrawPlayer:
 ; --------------------------------
   ld a, l
   ldh [oam_ptr], a
-
   ret
 
 WalkLegAnim:
@@ -242,3 +241,155 @@ WalkLegAnim:
   db 6, 5
   db 4, 5
   db 4, 7
+
+; --------------------------------
+PlayerLevelCollision:
+  ; Background collision
+  ld h, level_map>>8
+  ld b, 0 ; collision bits
+
+  call .get_top
+  call .get_left
+  call .is_solid_top
+  rl b
+  call .get_top
+  call .get_right
+  call .is_solid_top
+  rl b
+  call .get_bottom
+  call .get_left
+  call .is_solid_bottom
+  rl b
+  call .get_bottom
+  call .get_right
+  call .is_solid_bottom
+  rl b
+
+  ; Set off the appropriate reaction
+  ld a, b
+  xor 15  ; fix the inverted carry
+  add a,a ; *2 for addresses
+  ld hl, .reactions
+  add_hl_a
+  ld a, [hl+]
+  ld h, [hl]
+  ld l, a
+  jp hl
+
+.get_top:
+  ldh a, [PlayerPYL]
+  add $80
+  ldh a, [PlayerPYH]
+  adc 0
+.get_top_shift:
+  add a
+  add a
+  add a
+  add a
+  ld l, a
+  ret
+.get_bottom:
+  ldh a, [PlayerPYL]
+  add $80
+  ldh a, [PlayerPYH]
+  adc 1
+  jr .get_top_shift
+.get_left:
+  ldh a, [PlayerPXL]
+  add $10
+  ldh a, [PlayerPXH]
+  adc L
+  ld l, a
+  ld a, [hl]
+  ret
+.get_right
+  ldh a, [PlayerPXL]
+  add $e0
+  ldh a, [PlayerPXH]
+  adc L
+  ld l, a
+  ld a, [hl]
+  ret
+.solid_top_instead:
+  pop af
+.is_solid_top:
+  push hl
+  ld hl, MetatileFlags
+  add_hl_a
+  ld a, [hl]
+  cp 128
+  pop hl
+  ret
+.is_solid_bottom:
+  push af
+  ldh a, [PlayerPYL]
+  and 128
+  jr nz, .solid_top_instead
+  pop af
+  push hl
+  ld hl, MetatileFlags
+  add_hl_a
+  ld a, [hl]
+  cp 128
+  pop hl
+  ret
+.reactions:
+  dw .reaction____________
+  dw .reaction__________dr
+  dw .reaction_______dl___
+  dw .reaction_______dl_dr
+  dw .reaction____ur______
+  dw .reaction____ur____dr
+  dw .reaction____ur_dl___
+  dw .reaction____ur_dl_dr
+  dw .reaction_ul_________
+  dw .reaction_ul_______dr
+  dw .reaction_ul____dl___
+  dw .reaction_ul____dl_dr
+  dw .reaction_ul_ur______
+  dw .reaction_ul_ur____dr
+  dw .reaction_ul_ur_dl___
+  dw .reaction_ul_ur_dl_dr
+
+.reaction____________:
+.reaction____ur______:
+.reaction____ur____dr:
+.reaction____ur_dl___:
+.reaction____ur_dl_dr:
+.reaction_ul_________:
+.reaction_ul_______dr:
+.reaction_ul____dl___:
+.reaction_ul____dl_dr:
+.reaction_ul_ur______:
+.reaction_ul_ur____dr:
+.reaction_ul_ur_dl___:
+.reaction_ul_ur_dl_dr:
+  ret
+
+.reaction__________dr:
+.reaction_______dl___:
+.reaction_______dl_dr:
+  xor a
+  ldh [PlayerVYL], a
+  ldh [PlayerVYH], a
+
+  ldh a, [PlayerPYL]
+  and 128
+  jr nz, .reaction_ground_skip
+    ldh a, [PlayerPYH]
+    dec a
+    ldh [PlayerPYH], a
+.reaction_ground_skip
+  ld a, 128
+  ldh [PlayerPYL], a
+
+
+  ldh a, [KeyNew]
+  and KEY_A
+  ret z
+  ld a, low(-$44)
+  ldh [PlayerVYL],a
+  ld a, high(-$44)
+  ldh [PlayerVYH],a
+  ret
+
