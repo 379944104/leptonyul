@@ -2,6 +2,7 @@ SECTION "vars", WRAM0
 sprites:   ds 256 ; Sprite page, currently only used to initialize OAM to all zeros
 level_map: ds 256 ; Level blocks
 actors:    ds 256 ; Actor information
+OfferJumpTimer: db
 
 section "hram", HRAM[$FF80]
 run_dma:      ds 8 ; Copy of the OAM DMA routine in HRAM
