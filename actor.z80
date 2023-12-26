@@ -15,26 +15,21 @@
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;
 
-SECTION "main", ROM0
+SECTION "actor", ROM0
 
-main_init:
+RunActors:
+  ret
 
-main_loop:
-  ; Do graphical updates
-  call wait_vblank
-  ld a, sprites>>8
-  call run_dma
-  ldh a, [CameraPX]
-  ldh [rSCX], a
-  ldh a, [CameraPY]
-  ldh [rSCY], a
+; --------------------------------------------
 
-  ; Run game loop stuff
-  call readkeys
-  xor a
-  ldh [oam_ptr], a
-  call RunPlayer
-  call RunActors
-  call AdjustCamera
+ActorNone:
+  ret
 
-  jp main_loop
+ActorBlock:
+  ret
+
+; --------------------------------------------
+SECTION "actor_pointers", ROM0,ALIGN[8]
+ActorPointers:
+  dw ActorNone
+  dw ActorBlock
