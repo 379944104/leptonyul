@@ -17,5 +17,6 @@ main_loop:
   xor a
   ldh [oam_ptr], a
   call RunPlayer
+  call AdjustCamera
 
   jp main_loop

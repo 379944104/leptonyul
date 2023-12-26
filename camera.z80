@@ -1,6 +1,100 @@
 SECTION "camera", ROM0
 
 AdjustCamera:
+  ; Get scroll target
+  ldh a, [PlayerPXL]
+  ld e, a
+  ldh a, [PlayerPXH]
+  sub 10/2
+  jr nc, .not_snap_l
+    xor a
+    ld e, a
+.not_snap_l:
+  cp 16-10
+  jr c, .not_snap_r
+    xor a
+    ld e, a
+    ld a, 16-10
+.not_snap_r:
+  ld d, a
+
+  ; Find difference
+  ldh a, [CameraX+0]
+  ld l, a
+  ldh a, [CameraX+1]
+  ld h, a
+
+  ld a, e
+  sub l
+  ld l, a
+  ld a, d
+  sbc h
+  ld h, a
+
+  ; Divide by 4
+  ld a, l
+  rept 4
+  sra h
+  rra
+  endr
+  ld l, a
+
+  ldh a, [CameraX+0]
+  add l
+  ldh [CameraX+0], a
+  ldh a, [CameraX+1]
+  adc h
+  ldh [CameraX+1], a
+
+; ---------------------------------------
+
+  ; Get scroll target
+  ld a, [PlayerScrollPYL]
+  ld e, a
+  ld a, [PlayerScrollPYH]
+  sub 9/2
+  jr nc, .not_snap_u
+    xor a
+    ld e, a
+.not_snap_u:
+  cp 16-9
+  jr c, .not_snap_d
+    xor a
+    ld e, a
+    ld a, 16-9
+.not_snap_d:
+  ld d, a
+
+  ; Find difference
+  ldh a, [CameraY+0]
+  ld l, a
+  ldh a, [CameraY+1]
+  ld h, a
+
+  ld a, e
+  sub l
+  ld l, a
+  ld a, d
+  sbc h
+  ld h, a
+
+  ; Divide by 4
+  ld a, l
+  rept 4
+  sra h
+  rra
+  endr
+  ld l, a
+
+  ldh a, [CameraY+0]
+  add l
+  ldh [CameraY+0], a
+  ldh a, [CameraY+1]
+  adc h
+  ldh [CameraY+1], a
+
+; ---------------------------------------
+
   ; Convert camera to pixel coordinates
   ldh a, [CameraX+1]
   ld b, a
@@ -23,4 +117,13 @@ AdjustCamera:
   ldh [CameraPY+0], a
   ld a, b
   ldh [CameraPY+1], a
+  ret
+
+NegateDE:
+  xor a
+  sub e
+  ld e, a
+  ld a, 0
+  sbc d
+  ld d, a
   ret

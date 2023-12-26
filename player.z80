@@ -381,6 +381,7 @@ PlayerLevelCollision:
   jp nz, OfferJumpFromGracePeriod
   ret
 
+; Ceiling and wall
 .reaction_ul_ur____dr:
   call .reaction_ul_______dr
   jp   .reaction_ul_ur______
@@ -389,6 +390,7 @@ PlayerLevelCollision:
   call .reaction_ul____dl___
   jp   .reaction_ul_ur______
 
+; Utilities for ceiling checks
 .check_ll:
   call .get_bottom
   ldh a, [PlayerPXL]
@@ -405,6 +407,7 @@ PlayerLevelCollision:
   add $100-COLLISION_OFFX+$10
   jr .check_l_common
 
+; Ceiling checks
 .reaction_ul_________:
   ldh a, [PlayerVYH]
   and 128
@@ -417,10 +420,8 @@ PlayerLevelCollision:
     ldh [PlayerVYH],a
 .reaction_ul_________skip:
   call .check_lr
-  ret nc
-    jp .reaction_ul____dl___
+  jp c, .reaction_ul____dl___
   ret
-
 .reaction____ur______:
   ldh a, [PlayerVYH]
   and 128
@@ -433,11 +434,8 @@ PlayerLevelCollision:
     ldh [PlayerVYH],a
 .reaction____ur______skip:
   call .check_ll
-  ret nc
-    jp .reaction____ur____dr
+  jp c, .reaction____ur____dr
   ret
-
-
 .reaction_ul_ur______:
   ld a, 10
   ldh [PlayerVYL], a
@@ -474,6 +472,11 @@ PlayerLevelCollision:
   xor a
   ldh [PlayerVYL], a
   ldh [PlayerVYH], a
+
+  ldh a, [PlayerPYL]
+  ld [PlayerScrollPYL], a
+  ldh a, [PlayerPYH]
+  ld [PlayerScrollPYH], a
 
   ldh a, [PlayerPYL]
   and 128
