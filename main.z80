@@ -33,8 +33,8 @@ main_loop:
   call readkeys
   xor a
   ldh [oam_ptr], a
+  call AdjustCamera
   call RunPlayer
   call RunActors
-  call AdjustCamera
 
   jp main_loop
