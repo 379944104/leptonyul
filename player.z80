@@ -22,6 +22,7 @@ COLLISION_OFFX = $40
 
 RunPlayer:
   ld a, [OfferJumpTimer]
+  or a
   jr z, .OfferJumpTimerZero
   dec a
   ld [OfferJumpTimer], a
@@ -506,7 +507,7 @@ PlayerLevelCollision:
   ldh [PlayerPYL], a
 
 OfferJump:
-  ld a, 4
+  ld a, 6
   ld [OfferJumpTimer], a
 OfferJumpFromGracePeriod:
   ldh a, [KeyNew]

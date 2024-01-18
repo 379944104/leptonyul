@@ -17,8 +17,74 @@
 
 SECTION "actor", ROM0
 
+;
+; 0 Type and direction
+; 1 Y velocity low
+; 2 Y velocity high
+; 3 Y low
+; 4 Y high
+; 5 X low
+; 6 X high
+; 7 State
+; 8 Timer to reset state
+; 9
+; A
+; B
+; C
+; D
+; E
+; F
+;
+
+actor_type  = 0
+actor_vyl   = 1
+actor_vyh   = 2
+actor_pyl   = 3
+actor_pyh   = 4
+actor_pxl   = 5
+actor_pxh   = 6
+actor_state = 7
+actor_timer = 8
+
+actor_size  = 16
+
+; --------------------------------------------
+
+  enum_start
+  enum_elem ACTOR_EMPTY
+  enum_elem ACTOR_BLOCK
+
+; --------------------------------------------
+
 RunActors:
-  ret
+  ld a, ACTOR_BLOCK*2
+  ld [actors], a
+;  ld a, 5
+;  ld [actors+actor_pyh], a
+;  ld [actors+actor_pxh], a
+
+  ld d, actors>>8
+  ld e, 0
+.loop:
+  ld a, [de]
+  or a
+  call nz, .call
+
+  ld a, e
+  add actor_size
+  ret z
+  ld e, a
+  jr .loop
+
+.call:
+  and $fe ; mask off direction bit
+  ld h, ActorPointers>>8
+  ld l, a
+
+  ld a, [hl+]
+  ld h, [hl]
+  ld l, a
+  jp hl
 
 ; --------------------------------------------
 
@@ -26,6 +92,196 @@ ActorNone:
   ret
 
 ActorBlock:
+  ld hl, actor_pyl
+  add hl, de
+  ldh a, [PlayerPYL]
+  ld [hl+], a
+  ldh a, [PlayerPYH]
+  dec a
+  ld [hl+], a
+  ldh a, [PlayerPXL]
+  ld [hl+], a
+  ldh a, [PlayerPXH]
+  ld [hl], a
+;  call EnemyGravity
+
+  ld a, 8
+  call DrawActor
+  ret
+
+
+; --------------------------------------------
+EnemyFindFree:
+  ld hl, actors
+.loop:
+  ld a, [hl]
+  or a
+  jr z, .success
+
+  ld a, l
+  add 16
+  jr z, .fail
+  ld l, a
+  jr .loop
+
+.success:
+  ; Found a slot, so clear it before returning it
+  push hl
+  push bc
+  xor a
+  ld b, 16
+.fill_loop:
+  ld [hl+], a
+  dec b
+  jr nz, .fill_loop
+  pop bc
+  pop hl
+
+  scf ; Return success
+  ret
+.fail:
+  or a ; Return failure
+  ret  
+
+EnemyGravity:
+  ld hl, actor_vyl
+  add hl, de
+
+  ld a, [hl]
+  ld c, a
+  add 4
+  ld [hl+], a
+  ld a, [hl]
+  ld b, a
+  adc 0
+  ld [hl+], a
+
+  ; Limit the speed
+  ld a, b
+  and 128
+  jr nz, .GoingUp
+  ld a, c
+  cp $60
+  blt .GoingUp
+  ; Correct it
+  dec l
+  dec l
+  ld a, $60
+  ld [hl+], a
+  inc l
+.GoingUp:
+
+  ; Apply gravity
+  ld a, [hl]
+  add c
+  ld [hl+], a
+  ld a, [hl]
+  adc b
+  ld [hl], a
+  ret
+
+; --------------------------------------------
+
+DrawActor:
+  ; Write the four tiles starting from this base tile
+  ldh [temp+0], a
+  inc a
+  ldh [temp+1], a
+  inc a
+  ldh [temp+2], a
+  inc a
+  ldh [temp+3], a
+
+; --------------------------------
+  ; Convert X and Y positions
+  ld hl, actor_pyl
+  add hl, de
+
+  ldh a, [CameraPY]
+  ld c, a
+  ld a, [hl+]
+  ld b, a
+  ld a, [hl+]
+  rept 4
+    rra
+    rr b
+  endr
+  ld a, b
+  add 16
+  sub c
+  ldh [temp+4], a
+
+  ldh a, [CameraPX]
+  ld c, a
+  ld a, [hl+]
+  ld b, a
+  ld a, [hl+]
+  rept 4
+    rra
+    rr b
+  endr
+  ld a, b
+  add 8
+  sub c
+
+  push de
+  ld d, a
+  ldh a, [temp+4]
+  ld e, a
+  ; D = X, E = Y
+  ld b, 0 ; B = attribute
+
+  ld h, high(sprites)
+  ldh a, [oam_ptr]
+  ld l, a
+; --------------------------------
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ldh a, [temp+0]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  add 8
+  ld [hl+], a ; X position
+  ldh a, [temp+1]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ldh a, [temp+2]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld [hl+], a ; Y position
+  ld a, d
+  add 8
+  ld [hl+], a ; X position
+  ldh a, [temp+3]
+  ld [hl+],a ; set tile number
+  ld a, b
+  ld [hl+],a ; set attribute
+skipdraw:
+
+; --------------------------------
+  pop de
+
+  ld a, l
+  ldh [oam_ptr], a
   ret
 
 ; --------------------------------------------
