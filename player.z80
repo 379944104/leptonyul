@@ -21,37 +21,66 @@ COLLISION_OFFX = $40
 
 
 RunPlayer:
-  ld a, [OfferJumpTimer]
-  or a
-  jr z, .OfferJumpTimerZero
-  dec a
-  ld [OfferJumpTimer], a
-.OfferJumpTimerZero:
-
+  cooldown [OfferJumpTimer]
+  cooldown [PlayerShootCooldown]
 
   ; React to key inputs
   ldh a, [KeyDown]
   ld b, a
 
-  bit 7, b
-  jr z, .NotDown
-  ldh a, [PlayerPYL]
-  add 16
-  ldh [PlayerPYL], a
-  ldh a, [PlayerPYH]
-  adc 0
-  ldh [PlayerPYH], a
-.NotDown:
+;  bit 7, b
+;  jr z, .NotDown
+;  ldh a, [PlayerPYL]
+;  add 16
+;  ldh [PlayerPYL], a
+;  ldh a, [PlayerPYH]
+;  adc 0
+;  ldh [PlayerPYH], a
+;.NotDown:
 
-  bit 6, b
-  jr z, .NotUp
+;  bit 6, b
+;  jr z, .NotUp
+;  ldh a, [PlayerPYL]
+;  sub 16
+;  ldh [PlayerPYL], a
+;  ldh a, [PlayerPYH]
+;  sbc 0
+;  ldh [PlayerPYH], a
+;.NotUp:
+
+  ldh a, [KeyDown] ;or KeyNew
+  and KEY_B
+  jr z, .NotShoot
+  ld a, [PlayerShootCooldown]
+  or a
+  jr nz, .NotShoot
+  call EnemyFindFree
+  jr nc, .NotShoot
+  ldh a, [PlayerDir]
+  or ACTOR_BLOCK*2
+  ld [hl+], a
+
+  ld a, low(-$20)
+  ld [hl+], a
+  ld a, high(-$20)
+  ld [hl+], a
+
   ldh a, [PlayerPYL]
-  sub 16
-  ldh [PlayerPYL], a
+  ld [hl+], a
   ldh a, [PlayerPYH]
-  sbc 0
-  ldh [PlayerPYH], a
-.NotUp:
+  dec a
+  ld [hl+], a
+  ldh a, [PlayerPXL]
+  ld [hl+], a
+  ldh a, [PlayerPXH]
+  ld [hl+], a
+  inc l       ; point at the timer
+  ld a, 35
+  ld [hl], a
+  ld [PlayerShootCooldown], a
+.NotShoot:
+
+
 
   bit 5, b
   jr z, .NotLeft
@@ -260,6 +289,56 @@ DrawPlayer:
   ld [hl+],a ; set attribute
 
 ; --------------------------------
+  ld a, l
+  ldh [oam_ptr], a
+
+; Display block above player's head if they have one to shoot
+  ld a, [PlayerShootCooldown]
+  or a
+  ret nz
+
+  ld a, e
+  sub 32
+  ld e, a
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ld a, $08
+  ld [hl+],a ; set tile number
+  xor a
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  ld [hl+], a ; Y position
+  ld a, d
+  add a, 8
+  ld [hl+], a ; X position
+  ld a, $09
+  ld [hl+],a ; set tile number
+  xor a
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld [hl+], a ; Y position
+  ld a, d
+  ld [hl+], a ; X position
+  ld a, $0a
+  ld [hl+],a ; set tile number
+  xor a
+  ld [hl+],a ; set attribute
+
+  ld a, e
+  add 8
+  ld [hl+], a ; Y position
+  ld a, d
+  add a, 8
+  ld [hl+], a ; X position
+  ld a, $0b
+  ld [hl+],a ; set tile number
+  xor a
+  ld [hl+],a ; set attribute
+
   ld a, l
   ldh [oam_ptr], a
   ret

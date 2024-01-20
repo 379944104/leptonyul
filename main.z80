@@ -29,6 +29,16 @@ main_loop:
   ldh a, [CameraPY]
   ldh [rSCY], a
 
+  ; Clear sprites
+  ld hl, sprites
+  xor a
+.clear_sprites:
+  ld [hl+], a
+  inc l
+  inc l
+  inc l
+  jr nz, .clear_sprites
+
   ; Run game loop stuff
   call readkeys
   xor a

@@ -44,3 +44,12 @@ enum_elem: MACRO
 \1 = enum_value
 	enum_skip
 ENDM
+
+cooldown: MACRO
+  ld a, \1
+  or a
+  jr z, .no\@
+  dec a
+  ld \1, a
+.no\@:
+ENDM

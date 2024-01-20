@@ -50,19 +50,7 @@ actor_size  = 16
 
 ; --------------------------------------------
 
-  enum_start
-  enum_elem ACTOR_EMPTY
-  enum_elem ACTOR_BLOCK
-
-; --------------------------------------------
-
 RunActors:
-  ld a, ACTOR_BLOCK*2
-  ld [actors], a
-;  ld a, 5
-;  ld [actors+actor_pyh], a
-;  ld [actors+actor_pxh], a
-
   ld d, actors>>8
   ld e, 0
 .loop:
@@ -92,18 +80,23 @@ ActorNone:
   ret
 
 ActorBlock:
-  ld hl, actor_pyl
-  add hl, de
-  ldh a, [PlayerPYL]
-  ld [hl+], a
-  ldh a, [PlayerPYH]
-  dec a
-  ld [hl+], a
-  ldh a, [PlayerPXL]
-  ld [hl+], a
-  ldh a, [PlayerPXH]
-  ld [hl], a
-;  call EnemyGravity
+;  ld hl, actor_pyl
+;  add hl, de
+;  ldh a, [PlayerPYL]
+;  ld [hl+], a
+;  ldh a, [PlayerPYH]
+;  dec a
+;  ld [hl+], a
+;  ldh a, [PlayerPXL]
+;  ld [hl+], a
+;  ldh a, [PlayerPXH]
+;  ld [hl], a
+
+  ld a, $10
+  call EnemyMoveForward
+
+  call EnemyGravity
+  call EnemyDespawnTimer
 
   ld a, 8
   call DrawActor
@@ -143,6 +136,33 @@ EnemyFindFree:
   or a ; Return failure
   ret  
 
+EnemyMoveForward:
+  ld c, a
+
+  ld b, 0
+  ld a, [de]
+  rra
+  jr nc, .no
+  ; Negate C
+  ld a, c
+  cpl
+  inc a
+  ld c, a
+  ; Negative, so high byte is $ff
+  ld b, 255
+.no:
+
+  ld hl, actor_pxl
+  add hl, de
+
+  ld a, [hl]
+  add c
+  ld [hl+], a
+  ld a, [hl]
+  adc b
+  ld [hl], a
+  ret
+
 EnemyGravity:
   ld hl, actor_vyl
   add hl, de
@@ -178,6 +198,18 @@ EnemyGravity:
   ld a, [hl]
   adc b
   ld [hl], a
+  ret
+
+EnemyDespawnTimer:
+  ld hl, actor_timer
+  add hl, de
+  ld a, [hl]
+  dec a
+  ld [hl], a
+  ret nz
+; Clear timer
+  xor a
+  ld [de], a
   ret
 
 ; --------------------------------------------

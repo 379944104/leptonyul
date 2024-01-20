@@ -5,6 +5,7 @@ actors:    ds 256 ; Actor information
 OfferJumpTimer:  db
 PlayerScrollPYL: db
 PlayerScrollPYH: db
+PlayerShootCooldown: db
 
 section "hram", HRAM[$FF80]
 run_dma:      ds 8 ; Copy of the OAM DMA routine in HRAM

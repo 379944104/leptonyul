@@ -1,0 +1,3 @@
+  enum_start
+  enum_elem ACTOR_EMPTY
+  enum_elem ACTOR_BLOCK

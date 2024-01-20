@@ -17,6 +17,7 @@
 
 INCLUDE "gbhw.inc" 
 INCLUDE "macros.inc" 
+INCLUDE "defines.z80" 
 INCLUDE "memory.z80"
 INCLUDE "header.z80"
 INCLUDE "misc.z80"
