@@ -57,7 +57,7 @@ RunPlayer:
   call EnemyFindFree
   jr nc, .NotShoot
   ldh a, [PlayerDir]
-  or ACTOR_BLOCK*2
+  or ACTOR_BLOCK
   ld [hl+], a
 
   ld a, low(-$20)
@@ -77,6 +77,7 @@ RunPlayer:
   inc l       ; point at the timer
   ld a, 35
   ld [hl], a
+  ld a, 20
   ld [PlayerShootCooldown], a
 .NotShoot:
 
@@ -91,7 +92,7 @@ RunPlayer:
   sbc 0
   ldh [PlayerPXH], a
 
-  ld a, 1
+  ld a, $80
   ldh [PlayerDir], a
 .NotLeft:
 

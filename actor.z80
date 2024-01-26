@@ -45,12 +45,21 @@ actor_pxl   = 5
 actor_pxh   = 6
 actor_state = 7
 actor_timer = 8
+actor_var1  = 9
+actor_var2  = 10
+actor_var3  = 11
+
 
 actor_size  = 16
 
 ; --------------------------------------------
 
 RunActors:
+  ld a, ACTOR_SPINNER
+  ld [actors], a
+  ld a, 5
+  ld [actors+actor_pyh], a
+
   ld d, actors>>8
   ld e, 0
 .loop:
@@ -65,7 +74,7 @@ RunActors:
   jr .loop
 
 .call:
-  and $fe ; mask off direction bit
+  add a ; multiply by 2, mask off direction bit
   ld h, ActorPointers>>8
   ld l, a
 
@@ -98,10 +107,103 @@ ActorBlock:
   call EnemyGravity
   call EnemyDespawnTimer
 
-  ld a, 8
-  call DrawActor
+  ld a, $08
+  jp DrawActorWithoutFlip
+
+
+ActorPoof:
   ret
 
+ActorFireball:
+  ret
+
+ActorFlames:
+  ld a, $1c
+  jp DrawActor
+
+ActorBottle:
+  ret
+
+ActorChip:
+  ld a, $0c
+  jp DrawActorWithoutFlip
+
+ActorKey:
+  ld a, $10
+  jp DrawActorWithoutFlip
+
+ActorPlodder:
+  ld hl, .frames
+  call EnemyFourFrameAnimation
+  jp DrawActor
+.frames:
+  db $4c, $50, $54, $50
+
+ActorSneaker:
+  ldh a, [retraces]
+  and 4
+  add $40
+  jp DrawActor
+
+ActorSpinner:
+  ld a, $10
+  call EnemyMoveForward
+
+  ; Display the frame
+  ldh a, [retraces]
+  and 16
+  call nz, EnemyTurnAround
+
+  ld hl, .frames
+  call EnemyFourFrameAnimation
+  call DrawActor
+
+  ldh a, [retraces]
+  and 16
+  call nz, EnemyTurnAround
+  ret
+
+.frames:
+  db $74, $78, $7c, $78
+
+ActorOwl:
+  ldh a, [retraces]
+  and 4
+  add $58
+  jp DrawActor
+
+ActorGeorge:
+  ld a, $70
+  jp DrawActor
+
+ActorBurger:
+  ld a, $48
+  jp DrawActor
+
+ActorFireWalk:
+  ldh a, [retraces]
+  and 4
+  add $28
+  jp DrawActor
+
+ActorFireJump:
+  ret
+
+ActorBallGuy:
+  ld a, $60
+  jp DrawActor
+
+ActorBallRoll:
+  ld a, $68
+  jp DrawActor
+
+ActorThwomp:
+  ld a, $64
+  jp DrawActor
+
+ActorMine:
+  ld a, $6c
+  jp DrawActorWithoutFlip
 
 ; --------------------------------------------
 EnemyFindFree:
@@ -136,12 +238,28 @@ EnemyFindFree:
   or a ; Return failure
   ret  
 
+EnemyTurnAround:
+  ld a, [de]
+  xor 128
+  ld [de], a
+  ret
+
+EnemyFourFrameAnimation:
+  ldh a, [retraces]
+  rra
+  rra
+  rra
+  and 3
+  add_hl_a
+  ld a, [hl] 
+  ret
+
 EnemyMoveForward:
   ld c, a
 
   ld b, 0
   ld a, [de]
-  rra
+  rla
   jr nc, .no
   ; Negate C
   ld a, c
@@ -214,6 +332,26 @@ EnemyDespawnTimer:
 
 ; --------------------------------------------
 
+DrawActorWithoutFlip:
+  ld b, 0
+DrawActorFlipped:
+  ld c, a
+  ld a, [de] ; save direction
+  push af
+
+  ; Patch in direction bit
+  add a
+  srl b
+  rra
+  ld [de], a
+
+  ld a, c
+  call DrawActor
+
+  pop af
+  ld [de], a ; restore direction
+  ret
+
 DrawActor:
   ; Write the four tiles starting from this base tile
   ldh [temp+0], a
@@ -223,6 +361,18 @@ DrawActor:
   ldh [temp+2], a
   inc a
   ldh [temp+3], a
+
+  xor a
+  ldh [temp+5], a ; attributes
+
+  ld a, [de]
+  rla
+  jr nc, .no_horiz_flip
+  hswap [temp+0], [temp+1]
+  hswap [temp+2], [temp+3]
+  ld a, OAM_XFLIP
+  ldh [temp+5], a
+.no_horiz_flip:
 
 ; --------------------------------
   ; Convert X and Y positions
@@ -261,7 +411,8 @@ DrawActor:
   ldh a, [temp+4]
   ld e, a
   ; D = X, E = Y
-  ld b, 0 ; B = attribute
+  ldh a, [temp+5]
+  ld b, a ; B = attribute
 
   ld h, high(sprites)
   ldh a, [oam_ptr]
@@ -321,3 +472,21 @@ SECTION "actor_pointers", ROM0,ALIGN[8]
 ActorPointers:
   dw ActorNone
   dw ActorBlock
+  dw ActorPoof
+  dw ActorFireball
+  dw ActorFlames
+  dw ActorBottle
+  dw ActorChip
+  dw ActorKey
+  dw ActorPlodder
+  dw ActorSneaker
+  dw ActorSpinner
+  dw ActorOwl
+  dw ActorGeorge
+  dw ActorBurger
+  dw ActorFireWalk
+  dw ActorFireJump
+  dw ActorBallGuy
+  dw ActorBallRoll
+  dw ActorThwomp
+  dw ActorMine
