@@ -48,6 +48,8 @@ actor_timer = 8
 actor_var1  = 9
 actor_var2  = 10
 actor_var3  = 11
+actor_pixely = 12
+actor_pixelx = 13
 
 
 actor_size  = 16
@@ -55,11 +57,6 @@ actor_size  = 16
 ; --------------------------------------------
 
 RunActors:
-  ld a, ACTOR_SPINNER
-  ld [actors], a
-  ld a, 5
-  ld [actors+actor_pyh], a
-
   ld d, actors>>8
   ld e, 0
 .loop:
@@ -133,6 +130,13 @@ ActorKey:
   jp DrawActorWithoutFlip
 
 ActorPlodder:
+  call EnemyFall
+  jr nc, .nowalk
+  ld a, $10
+  call EnemyWalk
+  call EnemyAutoBump
+.nowalk:
+
   ld hl, .frames
   call EnemyFourFrameAnimation
   jp DrawActor
@@ -150,14 +154,13 @@ ActorSpinner:
   call EnemyMoveForward
 
   ; Display the frame
-  ldh a, [retraces]
-  and 16
-  call nz, EnemyTurnAround
+  call .flip_last_frames
 
   ld hl, .frames
   call EnemyFourFrameAnimation
   call DrawActor
 
+.flip_last_frames:
   ldh a, [retraces]
   and 16
   call nz, EnemyTurnAround
@@ -280,6 +283,136 @@ EnemyMoveForward:
   adc b
   ld [hl], a
   ret
+
+EnemyWalk:
+  call EnemyMoveForward
+
+  ld hl, actor_pyl
+  add hl, de
+  ld a, [hl+] ; get middle of sprite Y pos
+  add $80
+  ld a, [hl+] ; HL = actor X low after this
+  adc 0
+  add a
+  add a
+  add a
+  add a
+  ld b, level_map>>8
+  ld c, a
+
+  ; make a decision based on direction
+  ld a, [de]
+  rla
+  jr c, .left
+.right:
+  ld a, [hl+]
+  add $f0
+  ld a, [hl-]
+  adc 0
+  call .test
+  ret nc
+; Snap
+  xor a
+  ld [hl], a ; clear PXL
+  scf
+  ret
+
+.left:
+  inc l
+  ld a, [hl-]
+  call .test
+  ret nc
+; Snap
+  xor a
+  ld [hl+], a ; clear PXL
+  ld a, [hl]
+  inc a
+  ld [hl], a ; increment PXH
+  scf
+  ret
+
+.test:
+  or c
+  ld c, a
+  ld a, [bc]
+  call IsSolid
+  ccf
+  ret
+
+EnemyAutoBump:
+  ret nc
+  jp EnemyTurnAround
+
+EnemyFall:
+  call EnemyGravity
+
+  call EnemyStandingOnSolid
+  ret nc
+
+  ld hl, actor_vyl
+  add hl, de
+  xor a
+  ld [hl+], a ; VYL
+  ld [hl+], a ; VYH
+  ld [hl], a  ; PYL
+  scf
+  ret
+
+EnemyStandingOnSolid:
+  ld hl, actor_vyh
+  add hl, de
+  ld a, [hl+] ; HL now = Y position, low
+  rla
+  jr nc, .positive
+.no:
+  or a
+  ret
+.positive;
+  inc l ; HL now = Y position, high
+
+  push de
+  ld d, level_map>>8
+
+  ld c, 0 ; bits for solidity
+  ld a, [hl+] ; HL now = X position, low
+  inc a ; one tile below
+  add a
+  add a
+  add a
+  add a
+  ld b, a     ; hold onto it
+
+  ; left
+  inc l       ; get X position high
+  ld a, [hl-] ; HL now = X position low
+  add b
+  ld e, a
+  ld a, [de]
+  call IsSolid
+  ccf
+  rl c
+
+  ; right
+  ld a, [hl+]
+  add $f0
+  ld a, [hl]
+  adc 0
+  add b
+  ld e, a
+  ld a, [de]
+  call IsSolid
+  ccf
+  rl c
+  
+  pop de
+
+  ; Carry = set if standing on something
+  ld a, c
+  or a
+  jr z, .no
+  scf
+  ret
+
 
 EnemyGravity:
   ld hl, actor_vyl
@@ -407,10 +540,21 @@ DrawActor:
   sub c
 
   push de
+
+  ; Save the pixel coordinates first
+  ld hl, actor_pixely
+  add hl, de
+  ; Now DE is saved so it can be overwritten freely
+
+  ; D = X, E = Y
   ld d, a
   ldh a, [temp+4]
   ld e, a
-  ; D = X, E = Y
+  ; Cache pixel X and Y
+  ld [hl+], a
+  ld a, d
+  ld [hl], a
+  
   ldh a, [temp+5]
   ld b, a ; B = attribute
 

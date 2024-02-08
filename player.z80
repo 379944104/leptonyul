@@ -86,7 +86,7 @@ RunPlayer:
   bit 5, b
   jr z, .NotLeft
   ldh a, [PlayerPXL]
-  sub 16
+  sub 24
   ldh [PlayerPXL], a
   ldh a, [PlayerPXH]
   sbc 0
@@ -99,7 +99,7 @@ RunPlayer:
   bit 4, b
   jr z, .NotRight
   ldh a, [PlayerPXL]
-  add 16
+  add 24
   ldh [PlayerPXL], a
   ldh a, [PlayerPXH]
   adc 0
@@ -358,11 +358,11 @@ PlayerLevelCollision:
 
   call .get_top
   call .get_left
-  call .is_solid_top
+  call IsSolid
   rl b
   call .get_top
   call .get_right
-  call .is_solid_top
+  call IsSolid
   rl b
   call .get_bottom
   call .get_left
@@ -419,16 +419,6 @@ PlayerLevelCollision:
   ld a, [hl]
   ret
 
-.solid_top_instead:
-  pop af
-.is_solid_top: ; carry = clear if solid, set if nonsolid
-  push hl
-  ld hl, MetatileFlags
-  add_hl_a
-  ld a, [hl]
-  cp 128
-  pop hl
-  ret
 .going_up:
   pop af
   scf
@@ -441,7 +431,7 @@ PlayerLevelCollision:
 
   ldh a, [PlayerPYL]
   and 128
-  jr nz, .solid_top_instead
+  jp nz, SolidAllInstead
   pop af
   push hl
   ld hl, MetatileFlags
@@ -498,7 +488,7 @@ PlayerLevelCollision:
   adc L
   ld l, a
   ld a, [hl]
-  jp .is_solid_top
+  jp IsSolid
 .check_lr:
   call .get_bottom
   ldh a, [PlayerPXL]
@@ -601,3 +591,21 @@ OfferJumpFromGracePeriod:
   ld [OfferJumpTimer], a
   ret
 
+SolidAllInstead:
+  pop af
+IsSolid: ; carry = clear if solid, set if nonsolid
+  push hl
+  ld hl, MetatileFlags
+  add_hl_a
+  ld a, [hl]
+  cp 128
+  pop hl
+  ret
+IsSolidOnTop: ; carry = clear if solid, set if nonsolid
+  push hl
+  ld hl, MetatileFlags
+  add_hl_a
+  ld a, [hl]
+  cp 64
+  pop hl
+  ret

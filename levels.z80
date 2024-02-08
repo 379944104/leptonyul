@@ -105,7 +105,8 @@ sample_map:
   db LVL_H_CHECKER|3, $42
   db LVL_H_CHECKER|1, $55
   db LVL_H_CHECKER|1, $66
-  db LVL_H_CHECKER|1, $77
+  db LVL_H_CHECKER|4, $77
+  db LVL_H_CHECKER|3, $6b
   db LVL_H_CHECKER|1, $88
   db LVL_H_CHECKER|1, $60
 ;  db LVL_H_CHECKER|0, $51

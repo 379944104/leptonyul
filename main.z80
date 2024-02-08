@@ -18,6 +18,8 @@
 SECTION "main", ROM0
 
 main_init:
+  ld a, ACTOR_PLODDER
+  ld [actors], a
 
 main_loop:
   ; Do graphical updates
