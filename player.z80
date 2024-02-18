@@ -76,11 +76,37 @@ RunPlayer:
   ld [hl+], a
   inc l       ; point at the timer
   ld a, 35
-  ld [hl], a
+  ld [hl+], a ; points at var1 now
+
+  ; Switch to the other palette
+  ld a, [RainbowRGBPIndex]
+  push af
+  xor 1
+  ld [RainbowRGBPIndex], a
+  pop af
+  ld [hl], a ; set var1
+
+  ; Next rainbow LUT index
+  ld a, [RainbowRGBTIndex]
+  inc a
+  and 31
+  ld [RainbowRGBTIndex], a
+  ; Also calculate the LUT
+  add a
+  ld hl, RainbowLUT
+  add_hl_a
+  ld a, [hl+]
+  ld [RainbowRGBData+0], a
+  ld a, [hl]
+  ld [RainbowRGBData+1], a
+
+  ld a, [RainbowRGBCIndex]
+  xor 8
+  ld [RainbowRGBCIndex], a
+
   ld a, 20
   ld [PlayerShootCooldown], a
 .NotShoot:
-
 
 
   bit 5, b
@@ -298,6 +324,9 @@ DrawPlayer:
   or a
   ret nz
 
+  ld a, [RainbowRGBPIndex]
+  ld b, a
+
   ld a, e
   sub 32
   ld e, a
@@ -306,7 +335,7 @@ DrawPlayer:
   ld [hl+], a ; X position
   ld a, $08
   ld [hl+],a ; set tile number
-  xor a
+  ld a, b
   ld [hl+],a ; set attribute
 
   ld a, e
@@ -316,7 +345,7 @@ DrawPlayer:
   ld [hl+], a ; X position
   ld a, $09
   ld [hl+],a ; set tile number
-  xor a
+  ld a, b
   ld [hl+],a ; set attribute
 
   ld a, e
@@ -326,7 +355,7 @@ DrawPlayer:
   ld [hl+], a ; X position
   ld a, $0a
   ld [hl+],a ; set tile number
-  xor a
+  ld a, b
   ld [hl+],a ; set attribute
 
   ld a, e
@@ -337,7 +366,7 @@ DrawPlayer:
   ld [hl+], a ; X position
   ld a, $0b
   ld [hl+],a ; set tile number
-  xor a
+  ld a, b
   ld [hl+],a ; set attribute
 
   ld a, l

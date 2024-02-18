@@ -21,6 +21,15 @@ main_init:
   ld a, ACTOR_PLODDER
   ld [actors], a
 
+  ld a, 7
+  ld [RainbowRGBPIndex], a
+  ld a, $80|$3c
+  ld [RainbowRGBCIndex], a
+  ld a, [RainbowLUT+0]
+  ld [RainbowRGBData+0], a
+  ld a, [RainbowLUT+1]
+  ld [RainbowRGBData+1], a
+
 main_loop:
   ; Do graphical updates
   call wait_vblank
@@ -30,6 +39,7 @@ main_loop:
   ldh [rSCX], a
   ldh a, [CameraPY]
   ldh [rSCY], a
+  call RainbowCopy
 
   ; Clear sprites
   ld hl, sprites

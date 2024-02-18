@@ -66,30 +66,31 @@ META_COLOR4 = $04
 META_COLOR5 = $05
 META_COLOR6 = $06
 META_COLOR7 = $07
+META_COLOR_MASK = $07
 
 MetatileFlags:
   ; empty
   db 0
   ; solid block
-  db META_SOLID_ALL
+  db META_SOLID_ALL|META_COLOR2
   ; grass block
-  db META_SOLID_ALL
+  db META_SOLID_ALL|META_COLOR1
   ; ladder
-  db 0
+  db META_COLOR3
   ; spring unpressed
-  db 0
+  db META_COLOR2
   ; spring pressed
-  db 0
+  db META_COLOR2
   ; lock
-  db META_SOLID_ALL
+  db META_SOLID_ALL|META_COLOR2
   ; fence
-  db 0
+  db META_COLOR3
   ; grass
-  db 0
+  db META_COLOR1
   ; flower 1
-  db 0
+  db META_COLOR1
   ; flower 2
-  db 0
+  db META_COLOR1
   ; solid platform
   db META_SOLID_TOP
   db META_SOLID_TOP
@@ -101,23 +102,22 @@ MetatileFlags:
   db META_SOLID_TOP
   db META_SOLID_TOP
   ; checker block
-  db $d4, $d6, $f4, $f6 ; ....
-  db $d4, $d6, $e4, $e6 ; ...d
-  db $e4, $e6, $f4, $f6 ; ..u.
-  db $e4, $e6, $e4, $e6 ; ..ud
-  db $d4, $d5, $f4, $f5 ; .r..
-  db $d4, $d5, $e4, $e5 ; .r.d
-  db $e4, $e5, $f4, $f5 ; .ru.
-  db $e4, $e5, $e4, $e5 ; .rud
-  db $d5, $d6, $f5, $f6 ; l...
-  db $d5, $d6, $e5, $e6 ; l..d
-  db $e5, $e6, $f5, $f6 ; l.u.
-  db $e5, $e6, $e5, $e6 ; l.ud
-  db $d5, $d5, $f5, $f5 ; lr..
-  db $d5, $d5, $e5, $e5 ; lr.d
-  db $e5, $e5, $f5, $f5 ; lru.
-  db $e5, $e5, $e5, $e5 ; lrud
-
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
+  db META_SOLID_ALL
 
 Metatiles:
   ; empty
@@ -236,7 +236,6 @@ RenderLevel:
 
   call ApplyAutotile
 
-
   ld bc, level_map
   ld de, SCREEN1
 .loop:
@@ -284,5 +283,60 @@ RenderLevel:
   
   jr .loop
 .exit:
-  ret
 
+  ldh a, [IsGameBoyColor]
+  cp $11
+  ret nz
+
+RenderLevelColor:
+  ld a, 1
+  ldh [$ff4f], a
+
+  ld bc, level_map
+  ld de, SCREEN1
+.loop:
+  ; get tile
+  ld a, [bc]
+
+  ld hl, MetatileFlags
+  add_hl_a
+  ld a, [hl]
+  and META_COLOR_MASK
+  ld [de], a
+  inc e
+
+  ld [de], a
+  push af
+  ld a, e
+  add 31
+  ld e, a
+  pop af
+  
+  ld [de], a
+  inc e
+
+  ld [de], a
+  ld a, e
+  sub 31
+  ld e, a
+
+  ; next block
+  inc c
+  jr z, .exit
+
+  ; next row of blocks?
+  ld a, c
+  and $0f
+  jr nz, .loop
+
+  ; next row, move DE down
+  ld hl, 32
+  add hl, de
+  ld d, h
+  ld e, l
+  
+  jr .loop
+.exit:
+  xor a
+  ldh [$ff4f], a
+  ret

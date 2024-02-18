@@ -7,6 +7,11 @@ PlayerScrollPYL: db
 PlayerScrollPYH: db
 PlayerShootCooldown: db
 
+RainbowRGBTIndex: db  ; table index
+RainbowRGBPIndex: db  ; palette number
+RainbowRGBCIndex: db  ; palette color RAM index
+RainbowRGBData:   ds 2
+
 section "hram", HRAM[$FF80]
 run_dma:      ds 8 ; Copy of the OAM DMA routine in HRAM
 

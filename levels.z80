@@ -96,9 +96,11 @@ MultiBlockList: ; for all other commands
   db BLOCK_FENCE,   BLOCK_GRASS, BLOCK_FLOWER1
 
 LoadLevel:
-  ld de, sample_map
+  ld de, map1 ;sample_map
   call DecompressMap
   ret
+
+include "levels/map1.s"
 
 sample_map:
   db LVL_V_LADDER|3,  $02
@@ -172,12 +174,12 @@ DecompressMap:
   pop de
   ; Get height
   ld a, [de]
+  swap a
   and 15
   inc a
   ld b, a
   ; Get width
   ld a, [de]
-  swap a
   and 15
   inc a
   ld c, a

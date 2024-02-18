@@ -272,7 +272,7 @@ InitGameBoyColor:
   ld a, $80      ; index zero, auto increment
   ldh [$ff68], a ; background palette index
   ld hl, BG_Palette
-  ld b, 2*4
+  ld b, 2*4*8
 .loop:
   ld a, [hl+]
   ld [$ff69], a
@@ -283,7 +283,7 @@ InitGameBoyColor:
   ld a, $80      ; index zero, auto increment
   ldh [$ff6a], a ; background palette index
   ld hl, Sprite_Palette
-  ld b, 2*4
+  ld b, 2*4*8
 .loop2:
   ld a, [hl+]
   ld [$ff6b], a
@@ -297,13 +297,129 @@ ENDM
 
 BG_Palette:
 ; Background palette
+; 0 gray
+  RGB_Color 17, 19, 31
+  RGB_Color  7,  7,  7
+  RGB_Color 13, 13, 13
+  RGB_Color 22, 22, 22
+; 1 grass
+  RGB_Color 17, 19, 31
+  RGB_Color  0, 10,  0
+  RGB_Color 10, 31,  0 ; green
+  RGB_Color 21, 10,  0 ; brown
+; 2 red
+  RGB_Color 17, 19, 31
+  RGB_Color 10,  0,  0
+  RGB_Color 31,  0,  0
+  RGB_Color 31, 10, 10
+; 3 orange
+  RGB_Color 17, 19, 31
+  RGB_Color 15,  5,  0
+  RGB_Color 31, 15,  0
+  RGB_Color 31, 17, 10
+; 4
   RGB_Color 31, 31, 31
   RGB_Color  0,  0,  0
   RGB_Color 13, 13, 13
   RGB_Color 22, 22, 22
-Sprite_Palette
+; 5
+  RGB_Color 31, 31, 31
+  RGB_Color  0,  0,  0
+  RGB_Color 13, 13, 13
+  RGB_Color 22, 22, 22
+; 6
+  RGB_Color 31, 31, 31
+  RGB_Color  0,  0,  0
+  RGB_Color 13, 13, 13
+  RGB_Color 22, 22, 22
+; 7
+  RGB_Color 31, 31, 31
+  RGB_Color  0,  0,  0
+  RGB_Color 13, 13, 13
+  RGB_Color 22, 22, 22
+
+Sprite_Palette:
 ; Sprite palette
+; 0 red
   RGB_Color  0,  0,  0
   RGB_Color  0,  0,  0
   RGB_Color 31,  0,  0
   RGB_Color 31, 31, 31
+; 1 green
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color  0, 31,  0
+  RGB_Color 31, 31, 31
+; 2 blue
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0, 31
+  RGB_Color 31, 31, 31
+; 3 yellow
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color 31, 31,  0
+  RGB_Color 31, 31, 31
+; 4
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color 31,  0,  0
+  RGB_Color 31, 31, 31
+; 5
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color 31,  0,  0
+  RGB_Color 31, 31, 31
+; 6
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color 31,  0,  0
+  RGB_Color 31, 31, 31
+; 7
+  RGB_Color  0,  0,  0
+  RGB_Color  0,  0,  0
+  RGB_Color 31,  0,  0
+  RGB_Color 31, 31, 31
+
+RainbowCopy:
+  ld a, [RainbowRGBCIndex]
+  ldh [$ff6a], a ; background palette index
+  ld a, [RainbowRGBData+0]
+  ldh [$ff6b], a
+  ld a, [RainbowRGBData+1]
+  ldh [$ff6b], a
+  ret
+
+RainbowLUT:
+  RGB_Color 31, 0, 0
+  RGB_Color 31, 6, 0
+  RGB_Color 31, 12, 0
+  RGB_Color 31, 17, 0
+  RGB_Color 31, 23, 0
+  RGB_Color 31, 29, 0
+  RGB_Color 27, 31, 0
+  RGB_Color 21, 31, 0
+  RGB_Color 16, 31, 0
+  RGB_Color 10, 31, 0
+  RGB_Color 4, 31, 0
+  RGB_Color 0, 31, 2
+  RGB_Color 0, 31, 8
+  RGB_Color 0, 31, 14
+  RGB_Color 0, 31, 19
+  RGB_Color 0, 31, 25
+  RGB_Color 0, 31, 31
+  RGB_Color 0, 25, 31
+  RGB_Color 0, 19, 31
+  RGB_Color 0, 14, 31
+  RGB_Color 0, 8, 31
+  RGB_Color 0, 2, 31
+  RGB_Color 4, 0, 31
+  RGB_Color 10, 0, 31
+  RGB_Color 15, 0, 31
+  RGB_Color 21, 0, 31
+  RGB_Color 27, 0, 31
+  RGB_Color 31, 0, 29
+  RGB_Color 31, 0, 23
+  RGB_Color 31, 0, 17
+  RGB_Color 31, 0, 12
+  RGB_Color 31, 0, 6

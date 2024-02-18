@@ -51,7 +51,6 @@ actor_var3  = 11
 actor_pixely = 12
 actor_pixelx = 13
 
-
 actor_size  = 16
 
 ; --------------------------------------------
@@ -104,6 +103,12 @@ ActorBlock:
   call EnemyGravity
   call EnemyDespawnTimer
 
+  ; Get block color
+  ld hl, actor_var1
+  add hl, de
+  ld a, [hl]
+  ld b, a
+
   ld a, $08
   jp DrawActorWithoutFlip
 
@@ -116,6 +121,7 @@ ActorFireball:
 
 ActorFlames:
   ld a, $1c
+  ld b, 0
   jp DrawActor
 
 ActorBottle:
@@ -123,10 +129,12 @@ ActorBottle:
 
 ActorChip:
   ld a, $0c
+  ld b, 0
   jp DrawActorWithoutFlip
 
 ActorKey:
   ld a, $10
+  ld b, 0
   jp DrawActorWithoutFlip
 
 ActorPlodder:
@@ -139,6 +147,7 @@ ActorPlodder:
 
   ld hl, .frames
   call EnemyFourFrameAnimation
+  ld b, 0
   jp DrawActor
 .frames:
   db $4c, $50, $54, $50
@@ -147,6 +156,7 @@ ActorSneaker:
   ldh a, [retraces]
   and 4
   add $40
+  ld b, 0
   jp DrawActor
 
 ActorSpinner:
@@ -158,6 +168,7 @@ ActorSpinner:
 
   ld hl, .frames
   call EnemyFourFrameAnimation
+  ld b, 0
   call DrawActor
 
 .flip_last_frames:
@@ -173,20 +184,24 @@ ActorOwl:
   ldh a, [retraces]
   and 4
   add $58
+  ld b, 0
   jp DrawActor
 
 ActorGeorge:
   ld a, $70
+  ld b, 0
   jp DrawActor
 
 ActorBurger:
   ld a, $48
+  ld b, 0
   jp DrawActor
 
 ActorFireWalk:
   ldh a, [retraces]
   and 4
   add $28
+  ld b, 0
   jp DrawActor
 
 ActorFireJump:
@@ -194,18 +209,22 @@ ActorFireJump:
 
 ActorBallGuy:
   ld a, $60
+  ld b, 0
   jp DrawActor
 
 ActorBallRoll:
   ld a, $68
+  ld b, 0
   jp DrawActor
 
 ActorThwomp:
   ld a, $64
+  ld b, 0
   jp DrawActor
 
 ActorMine:
   ld a, $6c
+  ld b, 0
   jp DrawActorWithoutFlip
 
 ; --------------------------------------------
@@ -466,7 +485,8 @@ EnemyDespawnTimer:
 ; --------------------------------------------
 
 DrawActorWithoutFlip:
-  ld b, 0
+  ; shift B to have zeros for the flip bits
+  sla b
 DrawActorFlipped:
   ld c, a
   ld a, [de] ; save direction
@@ -495,7 +515,7 @@ DrawActor:
   inc a
   ldh [temp+3], a
 
-  xor a
+  ld a, b
   ldh [temp+5], a ; attributes
 
   ld a, [de]
@@ -503,7 +523,8 @@ DrawActor:
   jr nc, .no_horiz_flip
   hswap [temp+0], [temp+1]
   hswap [temp+2], [temp+3]
-  ld a, OAM_XFLIP
+  ld a, b
+  or OAM_XFLIP
   ldh [temp+5], a
 .no_horiz_flip:
 
