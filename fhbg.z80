@@ -27,6 +27,7 @@ INCLUDE "camera.z80"
 INCLUDE "metatile.z80"
 INCLUDE "levels.z80"
 INCLUDE "actor.z80"
+INCLUDE "unpb16.z80"
 
 SECTION "init", ROM0[$0150]
 Init:
@@ -64,11 +65,20 @@ Init:
   ld c, oam_dma_routine_end - oam_dma_routine
   call memcpy8
 
-; Upload graphics
-  ld hl, graphics
-  ld de, VRAM_LOW
-  ld bc, $1800
-  call memcpy
+  ; Upload graphics (uncompressed)
+  ; ld hl, graphics
+  ; ld de, VRAM_LOW
+  ; ld bc, $1800
+  ; call memcpy
+
+  ; Upload graphics (compressed)
+  ld hl, VRAM_LOW
+  ld de, graphics
+  ld b, 0
+  call pb16_unpack_block
+  ld b, 128
+  call pb16_unpack_block
+
 ; Clear the rest of VRAM
   ld hl, VRAM_LOW+$1800
   ld bc, $0800
@@ -93,4 +103,4 @@ Init:
 ; -----------------------------------------
 
 graphics:
-INCBIN "fhbg.chr"
+INCBIN "fhbg.pb16"
