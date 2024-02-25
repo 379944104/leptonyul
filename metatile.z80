@@ -223,17 +223,6 @@ ApplyAutotile:
   ret
 
 RenderLevel:
-;  ld hl, level_map
-;.fill_loop:
-;  call get_random_number
-;  and 1
-;  add BLOCK_FALL_PLATFORM_LR
-;  ld [hl], a
-;  inc l
-;  jr nz, .fill_loop
-
-  call LoadLevel
-
   call ApplyAutotile
 
   ld bc, level_map

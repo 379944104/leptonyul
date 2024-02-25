@@ -51,6 +51,10 @@ actor_var3  = 11
 actor_pixely = 12
 actor_pixelx = 13
 
+astate_normal = 0
+astate_stunned = 1
+astate_paused = 2
+
 actor_size  = 16
 
 ; --------------------------------------------
@@ -148,7 +152,8 @@ ActorPlodder:
   ld hl, .frames
   call EnemyFourFrameAnimation
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 .frames:
   db $4c, $50, $54, $50
 
@@ -161,7 +166,7 @@ ActorSneaker:
 
 ActorSpinner:
   ld a, $10
-  call EnemyMoveForward
+  call EnemyFlying
 
   ; Display the frame
   call .flip_last_frames
@@ -175,7 +180,8 @@ ActorSpinner:
   ldh a, [retraces]
   and 16
   call nz, EnemyTurnAround
-  ret
+
+  jp EnemyCommon
 
 .frames:
   db $74, $78, $7c, $78
@@ -185,47 +191,58 @@ ActorOwl:
   and 4
   add $58
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorGeorge:
   ld a, $70
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorBurger:
+  ld a, $20
+  call EnemyFlying
+
   ld a, $48
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorFireWalk:
   ldh a, [retraces]
   and 4
   add $28
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorFireJump:
-  ret
+  jp EnemyCommon
 
 ActorBallGuy:
   ld a, $60
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorBallRoll:
   ld a, $68
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorThwomp:
   ld a, $64
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorMine:
   ld a, $6c
   ld b, 0
-  jp DrawActorWithoutFlip
+  call DrawActorWithoutFlip
+  jp EnemyCommon
 
 ; --------------------------------------------
 EnemyFindFree:
@@ -260,6 +277,29 @@ EnemyFindFree:
   or a ; Return failure
   ret  
 
+EnemyDontMoveIfStunned:
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  ret z
+  pop hl ; eat the return address
+  ret
+
+EnemyCommon:
+  ; Decrease the timer if enemy state isn't neutral
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl+]
+  or a
+  jr z, .not_stunned ; Normal state
+  dec [hl]
+  jr nz, .not_stunned
+  dec l
+  ld [hl], 0
+.not_stunned:
+  ret
+
 EnemyTurnAround:
   ld a, [de]
   xor 128
@@ -276,8 +316,62 @@ EnemyFourFrameAnimation:
   ld a, [hl] 
   ret
 
+EnemyFlying:
+  call EnemyMoveForward
+  
+  ld hl, actor_pxl
+  add hl, de
+  ld a, [hl+]
+  or a
+  ret z
+  ld a, [hl]
+  cp 15
+  ret c
+
+  ; Pick left or right side
+  ld [hl], 0
+  ; Direction bit unset (right)
+  ld a, [de]
+  and 127
+  ld [de], a
+  call get_random_number
+  rra
+  jr c, .right
+  ld [hl], 15
+  ; Direction bit set (left)
+  ld a, [de]
+  or 128
+  ld [de], a
+.right:
+
+  dec l
+  ; Clear PXL
+  ld [hl], 0
+  dec l
+
+.loop:
+  call get_random_number
+  and 15
+  cp 12
+  jr nc, .loop
+  add 2
+
+  ld [hl-], a
+  xor a
+
+  ld [hl], a
+
+  ; Also pause the enemy for a moment
+  ld hl, actor_state
+  add hl, de
+  ld [hl], astate_paused
+  inc l
+  ld [hl], 45
+  ret
+
 EnemyMoveForward:
   ld c, a
+  call EnemyDontMoveIfStunned
 
   ld b, 0
   ld a, [de]

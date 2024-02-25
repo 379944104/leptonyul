@@ -89,15 +89,6 @@ Init:
   xor a
   ldh [InitializedRandom], a
 
-  call RenderLevel
-
-  call ScreenOn
-
-  ; Erase all initial sprites
-  call wait_vblank
-  ld a, sprites>>8
-  call run_dma
-
   jp main_init
 
 ; -----------------------------------------
