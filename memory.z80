@@ -1,5 +1,5 @@
 SECTION "vars", WRAM0
-sprites:   ds 256 ; Sprite page, currently only used to initialize OAM to all zeros
+sprites:   ds 256 ; Sprite page
 level_map: ds 256 ; Level blocks
 actors:    ds 256 ; Actor information
 OfferJumpTimer:  db

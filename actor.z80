@@ -27,11 +27,11 @@ SECTION "actor", ROM0
 ; 6 X high
 ; 7 State
 ; 8 Timer to reset state
-; 9
-; A
-; B
-; C
-; D
+; 9 Variable 1
+; A Variable 2
+; B Variable 3
+; C Pixel position Y
+; D Pixel position X
 ; E
 ; F
 ;
@@ -176,12 +176,14 @@ ActorSpinner:
   ld b, 0
   call DrawActor
 
+  call .flip_last_frames
+  jp EnemyCommon
+
 .flip_last_frames:
   ldh a, [retraces]
   and 16
-  call nz, EnemyTurnAround
-
-  jp EnemyCommon
+  jp nz, EnemyTurnAround
+  ret
 
 .frames:
   db $74, $78, $7c, $78
@@ -298,6 +300,80 @@ EnemyCommon:
   dec l
   ld [hl], 0
 .not_stunned:
+
+; ----------------------
+
+  ; Display off-screen indicator
+  ld hl, actor_pixely
+  add hl, de
+  ld a, [hl+]
+  ld b, a    ; B = Y position
+  ld c, [hl] ; C = X position
+  cp 144+16
+  jr nc, .on_screen
+  ld a, c
+  cp 160+8
+  jr c, .on_screen
+.off_screen:
+
+;  ; Check Y position
+;  ld a, b
+;  cp 144
+;  jr c, .no_y
+;  ld hl, actor_pyh
+;  add hl, de
+;  ldh a, [PlayerPYH]
+;  cp [hl]
+;  jr nc, .y_top
+;  ld b, 144+16-8
+;  jr .no_y
+;.y_top:
+;  ld b, 16
+;.no_y:
+
+  ; Check X position
+  ld a, c
+  cp 160
+  jr c, .no_x
+  ld hl, actor_pxh
+  add hl, de
+  ldh a, [PlayerPXH]
+  cp [hl]
+  jr nc, .x_left
+.x_right:
+  ld c, 160+8-8
+  ld a, [de]
+  rla
+  jp nc, .on_screen
+  jr .no_x
+.x_left:
+  ld c, 8
+  ld a, [de]
+  rla
+  jp c, .on_screen
+.no_x:
+
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4
+  ldh [oam_ptr], a
+
+  ld a, b     ; Y
+  ld [hl+], a
+  ld a, c     ; X
+  ld [hl+], a
+  ld a, $21   ; tile
+  ld [hl+], a
+
+  ld a, [de]  ; Attribute, use direction to calculate it
+  rra
+  rra
+  and OAM_XFLIP
+  ld [hl], a
+.on_screen:
+
+
   ret
 
 EnemyTurnAround:
@@ -666,10 +742,20 @@ DrawActor:
   ldh a, [temp+4]
   ld e, a
   ; Cache pixel X and Y
-  ld [hl+], a
-  ld a, d
-  ld [hl], a
+  ld [hl+], a ; Y
+  ld [hl], d  ; X
   
+  ; Cancel if offscreen
+  cp 144+16
+  jr nc, .cancel
+  ld a, d
+  cp 160+8
+  jr c, .nocancel
+.cancel:
+  pop de
+  ret
+.nocancel:
+
   ldh a, [temp+5]
   ld b, a ; B = attribute
 
