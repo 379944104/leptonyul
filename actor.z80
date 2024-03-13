@@ -158,11 +158,19 @@ ActorPlodder:
   db $4c, $50, $54, $50
 
 ActorSneaker:
+  call EnemyFall
+  jr nc, .nowalk
+  ld a, $20
+  call EnemyWalk
+  call EnemyAutoBump
+.nowalk:
+
   ldh a, [retraces]
   and 4
   add $40
   ld b, 0
-  jp DrawActor
+  call DrawActor
+  jp EnemyCommon
 
 ActorSpinner:
   ld a, $10
@@ -341,13 +349,13 @@ EnemyCommon:
   cp [hl]
   jr nc, .x_left
 .x_right:
-  ld c, 160+8-8
+  ld c, 160+8-8-4
   ld a, [de]
   rla
   jp nc, .on_screen
   jr .no_x
 .x_left:
-  ld c, 8
+  ld c, 8+4
   ld a, [de]
   rla
   jp c, .on_screen
@@ -475,6 +483,29 @@ EnemyMoveForward:
 
 EnemyWalk:
   call EnemyMoveForward
+
+  ; When an enemy touches the side of the screen, move them to the top
+  ld hl, actor_pxh
+  add hl, de
+  ld a, [hl]
+  cp 15
+  jr c, .no_move
+  ; Move to the top middle
+  ; X position
+  ld a, 7
+  ld [hl-], a
+  ld a, $80
+  ld [hl-], a
+  ; Clear Y position
+  xor a
+  ld [hl-], a
+  ld [hl-], a
+
+  ; Randomly switch directions
+  call get_random_number
+  rra
+  call c, EnemyTurnAround
+.no_move:
 
   ld hl, actor_pyl
   add hl, de
