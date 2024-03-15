@@ -324,21 +324,6 @@ EnemyCommon:
   jr c, .on_screen
 .off_screen:
 
-;  ; Check Y position
-;  ld a, b
-;  cp 144
-;  jr c, .no_y
-;  ld hl, actor_pyh
-;  add hl, de
-;  ldh a, [PlayerPYH]
-;  cp [hl]
-;  jr nc, .y_top
-;  ld b, 144+16-8
-;  jr .no_y
-;.y_top:
-;  ld b, 16
-;.no_y:
-
   ; Check X position
   ld a, c
   cp 160
@@ -349,13 +334,13 @@ EnemyCommon:
   cp [hl]
   jr nc, .x_left
 .x_right:
-  ld c, 160+8-8-4
+  ld c, 160+8-8-2
   ld a, [de]
   rla
   jp nc, .on_screen
   jr .no_x
 .x_left:
-  ld c, 8+4
+  ld c, 8+2
   ld a, [de]
   rla
   jp c, .on_screen
@@ -381,6 +366,75 @@ EnemyCommon:
   ld [hl], a
 .on_screen:
 
+  ; fall into the next routine
+EnemyCollideWithBlocks:
+  ; Convert the positions back
+  ld hl, actor_pixely
+  add hl, de
+
+  ldh a, [CameraPY]
+  add [hl]
+  ld b, a ; B = non-scrolled pixel Y position
+
+  inc l
+
+  ldh a, [CameraPX]
+  add [hl]
+  ld c, a ; C = non-scrolled pixel X position
+
+  ; Now look through the list
+  ld hl, actors
+.loop:
+  ld a, [hl]
+  and 127
+  cp ACTOR_BLOCK
+  jr nz, .next
+  ; It's a block!
+  ; Skip ahead to the block's pixel Y coordinate to test against the enemy's
+  ld a, l
+  or actor_pixely
+  ld l, a
+
+  ; Colliding vertically?
+  ldh a, [CameraPY]
+  add [hl]
+  scf
+  sbc b ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (16+16-1) ;Carry set if overlap
+  jr nc, .reset
+
+  inc l
+
+  ; Colliding horizontally?
+  ldh a, [CameraPX]
+  add [hl]
+  scf
+  sbc c ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (16+16-1) ;Carry set if overlap
+  jr nc, .reset
+
+  ; Enemy hit by block!
+  ld hl, actor_state
+  add hl, de
+  ld [hl], astate_stunned
+  inc l
+  ld [hl], 180
+
+  ret
+.reset:
+  ld a, l
+  and $f0
+  ld l, a
+.next:
+  ; next entry
+  ld a, l
+  add 16
+  ld l, a
+  jr nz, .loop
 
   ret
 
@@ -728,6 +782,18 @@ DrawActor:
   or OAM_XFLIP
   ldh [temp+5], a
 .no_horiz_flip:
+
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  cp astate_stunned
+  jr nz, .no_vert_flip
+  hswap [temp+0], [temp+2]
+  hswap [temp+1], [temp+3]
+  ldh a, [temp+5]
+  or OAM_YFLIP
+  ldh [temp+5], a
+.no_vert_flip:
 
 ; --------------------------------
   ; Convert X and Y positions
