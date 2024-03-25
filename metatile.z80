@@ -20,7 +20,24 @@ SECTION "metatiles", ROM0
   enum_start
   enum_elem BLOCK_EMPTY
   enum_elem BLOCK_SOLID
+
   enum_elem BLOCK_DIRT
+  enum_elem BLOCK_DIRT_D
+  enum_elem BLOCK_DIRT_U
+  enum_elem BLOCK_DIRT_UD
+  enum_elem BLOCK_DIRT_R
+  enum_elem BLOCK_DIRT_RD
+  enum_elem BLOCK_DIRT_RU
+  enum_elem BLOCK_DIRT_RUD
+  enum_elem BLOCK_DIRT_L
+  enum_elem BLOCK_DIRT_LD
+  enum_elem BLOCK_DIRT_LU
+  enum_elem BLOCK_DIRT_LUD
+  enum_elem BLOCK_DIRT_LR
+  enum_elem BLOCK_DIRT_LRD
+  enum_elem BLOCK_DIRT_LRU
+  enum_elem BLOCK_DIRT_LRUD
+
   enum_elem BLOCK_LADDER
   enum_elem BLOCK_SPRING
   enum_elem BLOCK_PRESSED_SPRING
@@ -73,7 +90,22 @@ MetatileFlags:
   db 0
   ; solid block
   db META_SOLID_ALL|META_COLOR2
-  ; grass block
+  ; grass/dirt block
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
+  db META_SOLID_ALL|META_COLOR1
   db META_SOLID_ALL|META_COLOR1
   ; ladder
   db META_COLOR3
@@ -124,8 +156,24 @@ Metatiles:
   db "    "
   ; solid block
   db $d2, $d3, $e2, $e3
-  ; grass block
-  db $f0, $f2, $e0, $e1
+  ; grass/dirt block
+  db $f0, $f2, $f9, $fb ; ....
+  db $f0, $f2, $e0, $e1 ; ...d
+  db $e0, $e1, $f9, $fb ; ..u.
+  db $e0, $e1, $e0, $e1 ; ..ud
+  db $f0, $f1, $f9, $fa ; .r..
+  db $f0, $f1, $e0, $f3 ; .r.d
+  db $e0, $f3, $f9, $fa ; .ru.
+  db $e0, $f3, $e0, $f3 ; .rud
+  db $f1, $f2, $fa, $fb ; l...
+  db $f1, $f2, $f3, $e1 ; l..d
+  db $f3, $e1, $fa, $fb ; l.u.
+  db $f3, $f3, $fa, $fa ; l.ud
+  db $f1, $f1, $fa, $fa ; lr..
+  db $f1, $f1, $f3, $f3 ; lr.d
+  db $f3, $f3, $fa, $fa ; lru.
+  db $f3, $f3, $f3, $f3 ; lrud
+
   ; ladder
   db $f7, $f8, $f7, $f8
   ; spring unpressed
@@ -172,19 +220,50 @@ Metatiles:
   db $e5, $e5, $f5, $f5 ; lru.
   db $e5, $e5, $e5, $e5 ; lrud
 
+
+IsNotBlock:
+  ; shift in a 0
+  sla b
+  ret
 IsChecker:
   ld a, [hl]
   cp BLOCK_CHECKER
-  blt .no
+  jr c, IsNotBlock
   cp BLOCK_CHECKER_LRUD+1
-  bge .no
+  jr nc, IsNotBlock
   ; shift in a 1
   scf
   rl b
   ret
-.no:
-  ; shift in a 0
-  sla b
+IsDirt:
+  ld a, [hl]
+  cp BLOCK_DIRT
+  jr c, IsNotBlock
+  cp BLOCK_DIRT_LRUD+1
+  jr nc, IsNotBlock
+  ; shift in a 1
+  scf
+  rl b
+  ret
+IsPlatform:
+  ld a, [hl]
+  cp BLOCK_PLATFORM
+  jr c, IsNotBlock
+  cp BLOCK_PLATFORM_LR+1
+  jr nc, IsNotBlock
+  ; shift in a 1
+  scf
+  rl b
+  ret
+IsFallPlatform:
+  ld a, [hl]
+  cp BLOCK_FALL_PLATFORM
+  jr c, IsNotBlock
+  cp BLOCK_FALL_PLATFORM_LR+1
+  jr nc, IsNotBlock
+  ; shift in a 1
+  scf
+  rl b
   ret
 
 ApplyAutotile:
@@ -192,7 +271,7 @@ ApplyAutotile:
 .loop:
   ld a, [hl]
   cp BLOCK_CHECKER
-  jr nz, .no
+  jr nz, .not_checker
   ; Figure out which checker block to use
   ld b, 0
   push hl
@@ -217,7 +296,72 @@ ApplyAutotile:
   ld a, BLOCK_CHECKER
   add b
   ld [hl], a
-.no:
+.not_checker:
+
+  cp BLOCK_DIRT
+  jr nz, .not_dirt
+  ; Figure out which checker block to use
+  ld b, 0
+  push hl
+    ; Left
+    dec l
+    call IsDirt
+    ; Right
+    inc l
+    inc l
+    call IsDirt
+    ; Up
+    ld a, l
+    sub 17
+    ld l, a
+    call IsDirt
+    ; Down
+    ld a, l
+    add 32
+    ld l, a
+    call IsDirt
+  pop hl
+  ld a, BLOCK_DIRT
+  add b
+  ld [hl], a
+.not_dirt:
+
+  cp BLOCK_PLATFORM
+  jr nz, .not_platform
+  ld b, 0
+  inc l
+  call IsPlatform
+  dec l
+  dec l
+  call IsPlatform
+  inc l
+  ld a, BLOCK_PLATFORM
+  add b
+  ld [hl], a
+.not_platform:
+
+  cp BLOCK_FALL_PLATFORM
+  jr nz, .not_fall_platform
+  ld b, 0
+  inc l
+  call IsFallPlatform
+  dec l
+  dec l
+  call IsFallPlatform
+  inc l
+  ld a, BLOCK_FALL_PLATFORM
+  add b
+  ld [hl], a
+.not_fall_platform:
+
+  cp BLOCK_FLOWER1
+  jr nz, .not_flower
+  call get_random_number
+  rra
+  jr c, .not_flower
+  ld [hl], BLOCK_FLOWER2
+.not_flower:
+
   inc l
   jr nz, .loop
   ret
