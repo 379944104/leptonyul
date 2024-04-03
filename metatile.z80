@@ -431,6 +431,11 @@ RenderLevelColor:
   ; get tile
   ld a, [bc]
 
+  cp BLOCK_FLOWER1
+  jr z, .is_flowers
+  cp BLOCK_FLOWER2
+  jr z, .is_flowers
+
   ld hl, MetatileFlags
   add_hl_a
   ld a, [hl]
@@ -453,6 +458,7 @@ RenderLevelColor:
   sub 31
   ld e, a
 
+.next_block:
   ; next block
   inc c
   jr z, .exit
@@ -473,3 +479,23 @@ RenderLevelColor:
   xor a
   ldh [$ff4f], a
   ret
+
+.is_flowers:
+  ld a, META_COLOR2
+  ld [de], a
+  inc e
+
+  ld [de], a
+  ld a, e
+  add 31
+  ld e, a
+  
+  ld a, META_COLOR1
+  ld [de], a
+  inc e
+
+  ld [de], a
+  ld a, e
+  sub 31
+  ld e, a
+  jr .next_block
