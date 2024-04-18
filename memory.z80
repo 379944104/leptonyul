@@ -6,6 +6,7 @@ OfferJumpTimer:  db
 PlayerScrollPYL: db
 PlayerScrollPYH: db
 PlayerShootCooldown: db
+PlayerJumpCancel: db
 
 RainbowRGBTIndex: db  ; table index
 RainbowRGBPIndex: db  ; palette number

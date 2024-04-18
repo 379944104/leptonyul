@@ -24,10 +24,6 @@ RunPlayer:
   cooldown [OfferJumpTimer]
   cooldown [PlayerShootCooldown]
 
-  ; React to key inputs
-  ldh a, [KeyDown]
-  ld b, a
-
 ;  bit 7, b
 ;  jr z, .NotDown
 ;  ldh a, [PlayerPYL]
@@ -48,6 +44,29 @@ RunPlayer:
 ;  ldh [PlayerPYH], a
 ;.NotUp:
 
+  ; Jump cancel
+  ldh a, [KeyDown]
+  and KEY_A
+  jr nz, .no_jump_cancel
+  ld a, [PlayerJumpCancel]
+  or a
+  jr nz, .no_jump_cancel
+  ldh a, [PlayerVYH]
+  and 128
+  jr z, .no_jump_cancel
+
+  ; Smooth the jump cancel out
+  ld a, low(-$20)
+  ldh [PlayerVYL], a
+  ld a, high(-$20)
+  ldh [PlayerVYH], a
+
+  ld a, 1
+  ld [PlayerJumpCancel], a
+.no_jump_cancel:
+
+
+  ; Shoot blocks
   ldh a, [KeyDown] ;or KeyNew
   and KEY_B
   jr z, .NotShoot
@@ -60,11 +79,13 @@ RunPlayer:
   or ACTOR_BLOCK
   ld [hl+], a
 
+  ; Set Y velocity
   ld a, low(-$20)
   ld [hl+], a
   ld a, high(-$20)
   ld [hl+], a
 
+  ; Position above player's head
   ldh a, [PlayerPYL]
   ld [hl+], a
   ldh a, [PlayerPYH]
@@ -109,6 +130,11 @@ RunPlayer:
 .NotShoot:
 
 
+
+  ; React to key inputs
+  ldh a, [KeyDown]
+  ld b, a
+
   bit 5, b
   jr z, .NotLeft
   ldh a, [PlayerPXL]
@@ -120,6 +146,15 @@ RunPlayer:
 
   ld a, $80
   ldh [PlayerDir], a
+
+  ; Test wall collision
+  ld h, level_map>>8
+  call PlayerGetMiddle
+  call PlayerGetLeft
+  call IsSolid
+  jr c, .NotLeft
+  ld a, $100 - COLLISION_OFFX
+  ldh [PlayerPXL],a
 .NotLeft:
 
   bit 4, b
@@ -133,6 +168,15 @@ RunPlayer:
 
   xor a
   ldh [PlayerDir], a
+
+  ; Test wall collision
+  ld h, level_map>>8
+  call PlayerGetMiddle
+  call PlayerGetRight
+  call IsSolid
+  jr c, .NotRight
+  ld a, COLLISION_OFFX
+  ldh [PlayerPXL],a
 .NotRight:
 
   ; Increase gravity
@@ -385,20 +429,20 @@ PlayerLevelCollision:
   ld h, level_map>>8
   ld b, 0 ; collision bits
 
-  call .get_top
-  call .get_left
+  call PlayerGetTop
+  call PlayerGetLeft
   call IsSolid
   rl b
-  call .get_top
-  call .get_right
+  call PlayerGetTop
+  call PlayerGetRight
   call IsSolid
   rl b
-  call .get_bottom
-  call .get_left
+  call PlayerGetBottom
+  call PlayerGetLeft
   call .is_solid_bottom
   rl b
-  call .get_bottom
-  call .get_right
+  call PlayerGetBottom
+  call PlayerGetRight
   call .is_solid_bottom
   rl b
 
@@ -412,41 +456,6 @@ PlayerLevelCollision:
   ld h, [hl]
   ld l, a
   jp hl
-
-.get_top:
-  ldh a, [PlayerPYL]
-  add $80
-  ldh a, [PlayerPYH]
-  adc 0
-.get_top_shift:
-  add a
-  add a
-  add a
-  add a
-  ld l, a
-  ret
-.get_bottom:
-  ldh a, [PlayerPYL]
-  add $80
-  ldh a, [PlayerPYH]
-  adc 1
-  jr .get_top_shift
-.get_left:
-  ldh a, [PlayerPXL]
-  add COLLISION_OFFX
-  ldh a, [PlayerPXH]
-  adc L
-  ld l, a
-  ld a, [hl]
-  ret
-.get_right:
-  ldh a, [PlayerPXL]
-  add $100 - COLLISION_OFFX
-  ldh a, [PlayerPXH]
-  adc L
-  ld l, a
-  ld a, [hl]
-  ret
 
 .going_up:
   pop af
@@ -509,7 +518,7 @@ PlayerLevelCollision:
 
 ; Utilities for ceiling checks
 .check_ll:
-  call .get_bottom
+  call PlayerGetBottom
   ldh a, [PlayerPXL]
   add COLLISION_OFFX-$10
 .check_l_common:
@@ -519,7 +528,7 @@ PlayerLevelCollision:
   ld a, [hl]
   jp IsSolid
 .check_lr:
-  call .get_bottom
+  call PlayerGetBottom
   ldh a, [PlayerPXL]
   add $100-COLLISION_OFFX+$10
   jr .check_l_common
@@ -618,6 +627,48 @@ OfferJumpFromGracePeriod:
   ldh [PlayerVYH],a
   xor a
   ld [OfferJumpTimer], a
+  ld [PlayerJumpCancel], a
+  ret
+
+; These four routines assist with player/level collision
+PlayerGetTop:
+  ldh a, [PlayerPYL]
+  add $80
+  ldh a, [PlayerPYH]
+  adc 0
+.get_top_shift:
+  add a
+  add a
+  add a
+  add a
+  ld l, a
+  ret
+PlayerGetBottom:
+  ldh a, [PlayerPYL]
+  add $80
+  ldh a, [PlayerPYH]
+  adc 1
+  jr PlayerGetTop.get_top_shift
+PlayerGetMiddle:
+  ldh a, [PlayerPYH]
+  inc a
+  jr PlayerGetTop.get_top_shift
+
+PlayerGetLeft:
+  ldh a, [PlayerPXL]
+  add COLLISION_OFFX
+  ldh a, [PlayerPXH]
+  adc L
+  ld l, a
+  ld a, [hl]
+  ret
+PlayerGetRight:
+  ldh a, [PlayerPXL]
+  add $ff - COLLISION_OFFX
+  ldh a, [PlayerPXH]
+  adc L
+  ld l, a
+  ld a, [hl]
   ret
 
 SolidAllInstead:
