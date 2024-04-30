@@ -23,6 +23,7 @@ COLLISION_OFFX = $40
 RunPlayer:
   cooldown [OfferJumpTimer]
   cooldown [PlayerShootCooldown]
+  cooldown [PlayerInvincible]
 
 ;  bit 7, b
 ;  jr z, .NotDown
@@ -212,6 +213,10 @@ RunPlayer:
   call PlayerLevelCollision
 
 DrawPlayer:
+  ld a, [PlayerInvincible]
+  rra
+  ret c
+
   ld h, high(sprites)
   ldh a, [oam_ptr]
   ld l, a
@@ -226,8 +231,8 @@ DrawPlayer:
     srl b
     rra
   endr
-  ldh [PlayerPX], a
   add 8
+  ldh [PlayerPX], a
   sub c
   ld d, a
 
@@ -240,8 +245,8 @@ DrawPlayer:
     srl b
     rra
   endr
-  ldh [PlayerPY], a
   add 16
+  ldh [PlayerPY], a
   sub c
   ld e, a
 

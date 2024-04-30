@@ -7,6 +7,8 @@ PlayerScrollPYL: db
 PlayerScrollPYH: db
 PlayerShootCooldown: db
 PlayerJumpCancel: db
+PlayerHealth:     db
+PlayerInvincible: db
 
 RainbowRGBTIndex: db  ; table index
 RainbowRGBPIndex: db  ; palette number

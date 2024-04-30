@@ -436,6 +436,49 @@ EnemyCollideWithBlocks:
   ld l, a
   jr nz, .loop
 
+  ; No collisions with blocks. Now try against the player
+EnemyCollideWithPlayer:
+  ; B = non-scrolled pixel Y position
+  ; C = non-scrolled pixel X position
+  ; Collision based on http://atariage.com/forums/topic/71120-6502-killer-hacks/page-3?&#entry1054049
+
+  ; Colliding vertically?
+  ldh a, [PlayerPY]
+  scf
+  sbc b ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (24+16-1) ;Carry set if overlap
+  ret nc
+
+  ; Colliding horizontally?
+  ldh a, [PlayerPX]
+  add 4
+  scf
+  sbc c ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (8+16-1) ;Carry set if overlap
+  ret nc
+
+  ; If I reach there, there is a collision
+
+  ; Kill this enemy
+  xor a
+  ld [de], a
+
+  ; Damage player?
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  cp astate_stunned
+  ret z
+
+  ; Yes, damage player
+  ld a, 160
+  ld [PlayerInvincible], a
+
+  cooldown [PlayerHealth]
   ret
 
 EnemyTurnAround:
