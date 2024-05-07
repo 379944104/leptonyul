@@ -68,7 +68,7 @@ RunPlayer:
 
 
   ; Shoot blocks
-  ldh a, [KeyDown] ;or KeyNew
+  ldh a, [KeyNew] ;or KeyDown
   and KEY_B
   jr z, .NotShoot
   ld a, [PlayerShootCooldown]

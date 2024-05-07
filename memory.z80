@@ -10,6 +10,9 @@ PlayerJumpCancel: db
 PlayerHealth:     db
 PlayerInvincible: db
 
+EnemyLimit:       db  ; how many enemies are allowed at once
+EnemyCount:       db  ; enemies this frame
+
 RainbowRGBTIndex: db  ; table index
 RainbowRGBPIndex: db  ; palette number
 RainbowRGBCIndex: db  ; palette color RAM index
@@ -45,6 +48,11 @@ KeyDown:        db ; Keys pressed this frame
 KeyLast:        db ; Keys pressed last frame
 KeyNew:         db ; Keys pressed this frame that weren't last frame
 KeyRepeat:      db ; Timer for key repeat
+
+IsChipLevel:    db
+ChipsNeeded:    db
+EnemyListStart: ds 2 ; Pointer to start of enemy list
+EnemyList:      ds 2 ; Pointer to an enemy list
 
 IsGameBoyColor: db ; $11 if Game Boy Color
 

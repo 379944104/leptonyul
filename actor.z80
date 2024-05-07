@@ -60,6 +60,9 @@ actor_size  = 16
 ; --------------------------------------------
 
 RunActors:
+  xor a
+  ld [EnemyCount], a
+
   ld d, actors>>8
   ld e, 0
 .loop:
@@ -297,6 +300,10 @@ EnemyDontMoveIfStunned:
   ret
 
 EnemyCommon:
+  ; Increase enemy count
+  ld hl, EnemyCount
+  inc [hl]
+
   ; Decrease the timer if enemy state isn't neutral
   ld hl, actor_state
   add hl, de

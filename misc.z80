@@ -318,22 +318,22 @@ BG_Palette:
   RGB_Color 31, 15,  0
   RGB_Color 31, 17, 10
 ; 4 blue, water
-  RGB_Color 31, 31, 31
+  RGB_Color 17, 19, 31
   RGB_Color  0,  0, 10
   RGB_Color  0,  0, 31
   RGB_Color 15, 15, 31
 ; 5
-  RGB_Color 31, 31, 31
+  RGB_Color 17, 19, 31
   RGB_Color  0,  0,  0
   RGB_Color 13, 13, 13
   RGB_Color 22, 22, 22
 ; 6
-  RGB_Color 31, 31, 31
+  RGB_Color 17, 19, 31
   RGB_Color  0,  0,  0
   RGB_Color 13, 13, 13
   RGB_Color 22, 22, 22
 ; 7
-  RGB_Color 31, 31, 31
+  RGB_Color 17, 19, 31
   RGB_Color  0,  0,  0
   RGB_Color 13, 13, 13
   RGB_Color 22, 22, 22

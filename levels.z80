@@ -98,9 +98,21 @@ MultiBlockList: ; for all other commands
 LoadLevel:
   ld de, map1 ;sample_map
   call DecompressMap
+
+  ld a, low(SampleEnemyList)
+  ldh [EnemyList+0], a
+  ld a, high(SampleEnemyList)
+  ldh [EnemyList+1], a
   ret
 
 include "levels/map1.s"
+
+SampleEnemyList:
+  db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER
+  db ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER
+  db ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER
+  db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
+  db 0
 
 sample_map:
   db LVL_V_LADDER|3,  $02

@@ -18,13 +18,9 @@
 SECTION "main", ROM0
 
 main_init:
-  ld a, ACTOR_SPINNER
-  ld [actors], a
-  ld [actors+16], a
-  ld [actors+32], a
-  ld a, ACTOR_BURGER
-  ld [actors+48], a
-  ld [actors+64], a
+  ld a, 4
+  ld [PlayerHealth], a
+  ld [EnemyLimit], a
 
   ld a, 7
   ld [RainbowRGBPIndex], a
@@ -73,5 +69,64 @@ main_loop:
   call AdjustCamera
   call RunPlayer
   call RunActors
+
+  ; Are there more enemies to spawn in?
+  ldh a, [retraces]
+  and 63
+  jr nz, .no_spawn_enemy
+  ld hl, EnemyLimit
+  ld a, [EnemyCount]
+  cp [hl]
+  jr nc, .no_spawn_enemy
+
+  ldh a, [EnemyList+0]
+  ld e, a
+  ldh a, [EnemyList+1]
+  ld d, a
+  ld a, [de]
+  or a
+  jr nz, .not_end_of_list
+
+  ; If it's not a chip level, stop spawning enemies
+  ldh a, [IsChipLevel]
+  or a
+  jr z, .no_spawn_enemy
+
+  ; If it is, move to the start of the list
+  ldh a, [EnemyListStart+0]
+  ld e, a
+  ldh a, [EnemyListStart+1]
+  ld d, a
+.not_end_of_list:
+
+  call EnemyFindFree
+  jr nc, .no_spawn_enemy
+
+  ; Randomly face left or right
+  call get_random_number
+  and 128
+  ld b, a
+  ld a, [de] ; Reread enemy type
+  or b
+  ld [hl+], a
+
+  ; Move up to X position low
+  inc l
+  inc l
+  inc l
+  inc l
+  ; Set X position 
+  ld a, $80
+  ld [hl+], a
+  ld a, 7
+  ld [hl+], a
+
+  ; Write the incremented pointer back
+  inc de
+  ld a, e
+  ldh [EnemyList+0], a
+  ld a, d
+  ldh [EnemyList+1], a
+.no_spawn_enemy:
 
   jp main_loop
