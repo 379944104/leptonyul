@@ -129,4 +129,21 @@ main_loop:
   ldh [EnemyList+1], a
 .no_spawn_enemy:
 
+  ; Display health
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4
+  ldh [oam_ptr], a
+
+  ld a, 16+2
+  ld [hl+], a
+  ld a, 8+2
+  ld [hl+], a
+  ld a, [PlayerHealth]
+  or $80
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
   jp main_loop

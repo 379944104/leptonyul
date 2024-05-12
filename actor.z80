@@ -121,6 +121,83 @@ ActorBlock:
 
 
 ActorPoof:
+  call ActorScreenPosition
+
+  ld hl, actor_timer
+  add hl, de
+  push de
+  ld d, [hl]       ; D = timer
+
+  ldh a, [temp+0]
+  add 4
+  ld b, a          ; B = Y pos
+  ldh a, [temp+1]
+  add 4
+  ld c, a          ; C = X pos
+
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4*4
+  ldh [oam_ptr], a
+
+  ; Write the OAM
+  ld a, b
+  sub d
+  ld [hl+], a
+  ld a, c
+  sub d
+  ld [hl+], a
+  ld a, $20
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
+  ld a, b
+  sub d
+  ld [hl+], a
+  ld a, c
+  add d
+  ld [hl+], a
+  ld a, $20
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
+  ld a, b
+  add d
+  ld [hl+], a
+  ld a, c
+  sub d
+  ld [hl+], a
+  ld a, $20
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
+  ld a, b
+  add d
+  ld [hl+], a
+  ld a, c
+  add d
+  ld [hl+], a
+  ld a, $20
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+  pop de
+
+  ; Increase timer
+  ld hl, actor_timer
+  add hl, de
+  inc [hl]
+  ld a, [hl]
+  cp 10
+  ret nz
+
+  ; Really clear out the actor
+  xor a
+  ld [de], a
   ret
 
 ActorFireball:
@@ -288,7 +365,7 @@ EnemyFindFree:
   ret
 .fail:
   or a ; Return failure
-  ret  
+  ret
 
 EnemyDontMoveIfStunned:
   ld hl, actor_state
@@ -470,22 +547,39 @@ EnemyCollideWithPlayer:
 
   ; If I reach there, there is a collision
 
-  ; Kill this enemy
-  xor a
-  ld [de], a
-
   ; Damage player?
   ld hl, actor_state
   add hl, de
   ld a, [hl]
   cp astate_stunned
-  ret z
+  jr z, .just_kill
+
+  ; If touched while player is invincible, don't die
+  ; and player isn't hurt
+  ld a, [PlayerInvincible]
+  or a
+  ret nz
 
   ; Yes, damage player
   ld a, 160
   ld [PlayerInvincible], a
 
   cooldown [PlayerHealth]
+
+.just_kill:
+  ; Slight bump upwards
+  ld a, low($-50)
+  ldh [PlayerVYL], a
+  ld a, high($-50)
+  ldh [PlayerVYH], a
+
+  ; Kill this enemy
+  ld hl, actor_timer
+  add hl, de
+  ld [hl], 0
+
+  ld a, ACTOR_POOF
+  ld [de], a
   ret
 
 EnemyTurnAround:
@@ -788,6 +882,39 @@ EnemyDespawnTimer:
   ret
 
 ; --------------------------------------------
+
+ActorScreenPosition:
+  ld hl, actor_pyl
+  add hl, de
+
+  ldh a, [CameraPY]
+  ld c, a
+  ld a, [hl+]
+  ld b, a
+  ld a, [hl+]
+  rept 4
+    rra
+    rr b
+  endr
+  ld a, b
+  add 16
+  sub c
+  ldh [temp+0], a
+
+  ldh a, [CameraPX]
+  ld c, a
+  ld a, [hl+]
+  ld b, a
+  ld a, [hl+]
+  rept 4
+    rra
+    rr b
+  endr
+  ld a, b
+  add 8
+  sub c
+  ldh [temp+1], a
+  ret
 
 DrawActorWithoutFlip:
   ; shift B to have zeros for the flip bits
