@@ -502,6 +502,15 @@ EnemyCollideWithBlocks:
   jr nc, .reset
 
   ; Enemy hit by block!
+  ld hl, actor_vyl
+  add hl, de
+  ; Set velocity to bump a bit
+  ld a, low(-$10)
+  ld [hl+], a
+  ld a, high(-$10)
+  ld [hl], a
+
+  ; Stun for a bit
   ld hl, actor_state
   add hl, de
   ld [hl], astate_stunned
