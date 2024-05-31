@@ -83,6 +83,28 @@ LVL_H_FENCE   = $90
 LVL_H_GRASS   = $A0
 LVL_H_FLOWER  = $B0
 
+
+  ; level header format:
+  ; mm mm ee ee cL
+  ; m = map pointer, e = enemy list, c = chips needed, L = enemy limit
+LevelHeaders:
+  dw map1, SampleEnemyList
+  db $05
+
+
+
+SampleEnemyList:
+  db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER
+  db ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER
+  db ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER
+  db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
+  db 0
+include "levels/map1.s"
+
+;--------------------------------
+; level decompression
+;--------------------------------
+
 SingleBlockList: ; for 0x and 1x
   db BLOCK_EMPTY,    BLOCK_CHECKER,       BLOCK_SOLID,  BLOCK_DIRT
   db BLOCK_PLATFORM, BLOCK_FALL_PLATFORM, BLOCK_LADDER, BLOCK_FENCE
@@ -96,44 +118,51 @@ MultiBlockList: ; for all other commands
   db BLOCK_FENCE,   BLOCK_GRASS, BLOCK_FLOWER1
 
 LoadLevel:
-  ld de, map1 ;sample_map
-  call DecompressMap
+  ; Calculate pointer to the wanted header
+  ld h, a
+  ; * 5
+  add a
+  add a
+  add h
+  ld hl, LevelHeaders
+  add_hl_a
 
-  ld a, low(SampleEnemyList)
+  ; Clear level map first
+  push hl
+  ld hl, level_map
+  ld bc, 8
+  call memclear
+  pop hl
+
+  ; Get level map pointer
+  ld a, [hl+]
+  ld e, a
+  ld a, [hl+]
+  ld d, a
+  push hl
+  call DecompressMap
+  pop hl
+
+  ; Get enemy pointer
+  ld a, [hl+]
   ldh [EnemyList+0], a
-  ld a, high(SampleEnemyList)
+  ldh [EnemyListStart+0], a
+  ld a, [hl+]
   ldh [EnemyList+1], a
+  ldh [EnemyListStart+1], a
+
+  ; Get the last byte with chip count and enemy limit
+  ld a, [hl]
+  and 15
+  ld [EnemyLimit], a
+  ld a, [hl]
+  swap a
+  and 15
+  ldh [ChipsNeeded], a
+  ldh [IsChipLevel], a
   ret
 
-include "levels/map1.s"
-
-SampleEnemyList:
-  db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER
-  db ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SNEAKER
-  db ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER
-  db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
-  db 0
-
-sample_map:
-  db LVL_V_LADDER|3,  $02
-  db LVL_H_CHECKER|3, $42
-  db LVL_H_CHECKER|1, $55
-  db LVL_H_CHECKER|1, $66
-  db LVL_H_CHECKER|4, $77
-  db LVL_H_CHECKER|3, $6b
-  db LVL_H_CHECKER|1, $88
-  db LVL_H_CHECKER|1, $60
-;  db LVL_H_CHECKER|0, $51
-  db $00, $00
-
-;  db LVL_SPRING, $22
-;  db LVL_H_CHECKER|5, $55
-;  db LVL_V_CHECKER|5, $55
-;  db LVL_H_CHECKER|5, $a5
-;  db LVL_V_CHECKER|5, $5a
-;  db LVL_RECT|LVL_SOLID, $14, $33
-;  db $00, $00
-
+; Decompresses map DE into RAM
 DecompressMap:
   ; Read type
   ld a, [de]
@@ -160,7 +189,7 @@ DecompressMap:
   jr z, .rectangle
   dec a
   cp 3
-  bge .horiz
+  jr nc, .horiz
 
 .vert:
   call .get_multi_count
@@ -226,6 +255,16 @@ DecompressMap:
 
 .exit:
   pop de
+
+  ; Get position of last instruction
+  ; to get player starting position
+  ldh a, [temp+1]
+  and 15
+  ldh [PlayerPXH], a
+  ldh a, [temp+1]
+  swap a
+  and 15
+  ldh [PlayerPYH], a
   ret
 
 .get_multi_count:
