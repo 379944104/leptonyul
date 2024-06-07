@@ -625,7 +625,7 @@ EnemyFlying:
   ld a, [de]
   and 127
   ld [de], a
-  call get_random_number
+  call GetRandomNumber
   rra
   jr c, .right
   ld [hl], 15
@@ -641,7 +641,7 @@ EnemyFlying:
   dec l
 
 .loop:
-  call get_random_number
+  call GetRandomNumber
   and 15
   cp 12
   jr nc, .loop
@@ -709,7 +709,7 @@ EnemyWalk:
   ld [hl-], a
 
   ; Randomly switch directions
-  call get_random_number
+  call GetRandomNumber
   rra
   call c, EnemyTurnAround
 .no_move:

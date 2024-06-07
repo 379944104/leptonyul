@@ -38,6 +38,9 @@ SECTION "metatiles", ROM0
   enum_elem BLOCK_DIRT_LRU
   enum_elem BLOCK_DIRT_LRUD
 
+  enum_elem BLOCK_WATER
+  enum_elem BLOCK_WATER_TOP
+
   enum_elem BLOCK_LADDER
   enum_elem BLOCK_SPRING
   enum_elem BLOCK_PRESSED_SPRING
@@ -107,6 +110,9 @@ MetatileFlags:
   db META_SOLID_ALL|META_COLOR1
   db META_SOLID_ALL|META_COLOR1
   db META_SOLID_ALL|META_COLOR1
+  ; water
+  db META_COLOR4
+  db META_COLOR4
   ; ladder
   db META_COLOR3
   ; spring unpressed
@@ -173,6 +179,10 @@ Metatiles:
   db $f1, $f1, $f3, $f3 ; lr.d
   db $f3, $f3, $fa, $fa ; lru.
   db $f3, $f3, $f3, $f3 ; lrud
+
+  ; water
+  db $ff, $ff, $ff, $ff ; main
+  db $fe, $fe, $ff, $ff ; top
 
   ; ladder
   db $f7, $f8, $f7, $f8
@@ -356,14 +366,30 @@ ApplyAutotile:
 
   cp BLOCK_FLOWER1
   jr nz, .not_flower
-  call get_random_number
+  call GetRandomNumber
   rra
   jr c, .not_flower
   ld [hl], BLOCK_FLOWER2
 .not_flower:
 
+  cp BLOCK_WATER
+  jr nz, .not_water
+  ; Check tile above
+  ld a, l
+  sub 16
+  ld c, a
+  ld b, level_map>>8
+  ld a, [bc]
+  cp BLOCK_WATER
+  jr z, .not_water
+  cp BLOCK_WATER_TOP
+  jr z, .not_water
+  ld a, BLOCK_WATER_TOP
+  ld [hl], a
+.not_water:
+
   inc l
-  jr nz, .loop
+  jp nz, .loop
   ret
 
 RenderLevel:

@@ -14,9 +14,9 @@ map1:
   db LVL_V_CHECKER|$2, $bb
   db LVL_V_CHECKER|$1, $ca
   db LVL_CHECKER, $d9
-  db LVL_RECT|LVL_DIRT,    $f0, $f
+  db LVL_H_DIRT|$f, $f0
   db LVL_V_LADDER|$3, $b5
-  db LVL_RECT|LVL_DIRT,    $b1, $3
+  db LVL_H_DIRT|$3, $b1
   db LVL_FLOWER,  $a4
   db LVL_SPRING,  $a1
   db LVL_H_PLAT|$1, $61
@@ -24,4 +24,4 @@ map1:
   db LVL_H_GRASS|$1, $a2
   db LVL_H_PLAT|$1, $81
   db LVL_H_PLAT|$1, $41
-  db LVL_DONE, $35
+  db LVL_DONE, $33

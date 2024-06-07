@@ -17,7 +17,7 @@
 
 SECTION "main", ROM0
 
-main_init:
+MainInit:
   ld a, 4
   ld [PlayerHealth], a
   ld [EnemyLimit], a
@@ -33,6 +33,7 @@ main_init:
 
   call LoadLevel
   call RenderLevel
+  call UploadLevelPalette
 
   call ScreenOn
 
@@ -41,7 +42,7 @@ main_init:
   ld a, sprites>>8
   call run_dma
 
-main_loop:
+MainLoop:
   ; Do graphical updates
   call wait_vblank
   ld a, sprites>>8
@@ -103,7 +104,7 @@ main_loop:
   jr nc, .no_spawn_enemy
 
   ; Randomly face left or right
-  call get_random_number
+  call GetRandomNumber
   and 128
   ld b, a
   ld a, [de] ; Reread enemy type
@@ -146,4 +147,4 @@ main_loop:
   xor a
   ld [hl+], a
 
-  jp main_loop
+  jp MainLoop

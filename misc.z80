@@ -205,7 +205,7 @@ ClearNametable:
   ld e, " "
   jp memset
 
-get_random_number:
+GetRandomNumber:
   ; Adapted from the random number generator used in Nova the Squirrel
   ; http://codebase64.org/doku.php?id=base:two_very_fast_16bit_pseudo_random_generators_as_lfsr
   ldh a, [InitializedRandom]
@@ -268,6 +268,49 @@ InitGameBoyColor:
   ldh [$FF4F], a ; VRAM bank
   ld a, 1
   ldh [$FF70], a ; WRAM bank
+  ret
+
+RGB_Color: MACRO
+  dw \1 | (\2<<5) | (\3<<10)
+ENDM
+
+UploadTitlePalette:
+  ldh a, [IsGameBoyColor]
+  cp $11
+  ret nz
+
+  ld a, $80      ; index zero, auto increment
+  ldh [$ff68], a ; background palette index
+  ld hl, TitlePalette
+  ld b, 2*4
+.loop:
+  ld a, [hl+]
+  ld [$ff69], a
+  dec b
+  jr nz, .loop
+
+; Now for sprites
+  ld a, $80      ; index zero, auto increment
+  ldh [$ff6a], a ; background palette index
+  ld hl, TitlePalette
+  ld b, 2*4
+.loop2:
+  ld a, [hl+]
+  ld [$ff6b], a
+  dec b
+  jr nz, .loop2
+  ret
+
+TitlePalette:
+  RGB_Color 31, 31, 31
+  RGB_Color  0,  0,  0
+  RGB_Color 13, 13, 13
+  RGB_Color 22, 22, 22
+
+UploadLevelPalette:
+  ldh a, [IsGameBoyColor]
+  cp $11
+  ret nz
 
   ld a, $80      ; index zero, auto increment
   ldh [$ff68], a ; background palette index
@@ -290,10 +333,6 @@ InitGameBoyColor:
   dec b
   jr nz, .loop2
   ret
-
-RGB_Color: MACRO
-  dw \1 | (\2<<5) | (\3<<10)
-ENDM
 
 BG_Palette:
 ; Background palette

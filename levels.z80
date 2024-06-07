@@ -67,7 +67,7 @@ LVL_FENCE     = $07
 LVL_GRASS     = $08
 LVL_FLOWER    = $09
 LVL_SPRING    = $0a
-LVL_LOCK      = $0b
+LVL_WATER     = $0b
 
 LVL_RECT      = $10 ; OR with the above list
 
@@ -82,7 +82,7 @@ LVL_H_FPLAT   = $80
 LVL_H_FENCE   = $90
 LVL_H_GRASS   = $A0
 LVL_H_FLOWER  = $B0
-
+LVL_H_DIRT    = $C0
 
   ; level header format:
   ; mm mm ee ee cL
@@ -108,14 +108,14 @@ include "levels/map1.s"
 SingleBlockList: ; for 0x and 1x
   db BLOCK_EMPTY,    BLOCK_CHECKER,       BLOCK_SOLID,  BLOCK_DIRT
   db BLOCK_PLATFORM, BLOCK_FALL_PLATFORM, BLOCK_LADDER, BLOCK_FENCE
-  db BLOCK_GRASS,    BLOCK_FLOWER1,       BLOCK_SPRING, BLOCK_LOCK
+  db BLOCK_GRASS,    BLOCK_FLOWER1,       BLOCK_SPRING, BLOCK_WATER
 
 MultiBlockList: ; for all other commands
 ; vert
   db BLOCK_CHECKER, BLOCK_SOLID, BLOCK_LADDER
 ; horiz
   db BLOCK_CHECKER, BLOCK_SOLID, BLOCK_PLATFORM, BLOCK_FALL_PLATFORM
-  db BLOCK_FENCE,   BLOCK_GRASS, BLOCK_FLOWER1
+  db BLOCK_FENCE,   BLOCK_GRASS, BLOCK_FLOWER1,  BLOCK_DIRT
 
 LoadLevel:
   ; Calculate pointer to the wanted header

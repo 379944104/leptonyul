@@ -474,13 +474,14 @@ PlayerLevelCollision:
 
   ldh a, [PlayerPYL]
   and 128
-  jp nz, SolidAllInstead
+  jp z, SolidAllInstead
+
   pop af
   push hl
   ld hl, MetatileFlags
   add_hl_a
   ld a, [hl]
-  cp 128
+  cp 64
   pop hl
   ret
 .reactions:
