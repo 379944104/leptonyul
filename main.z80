@@ -54,19 +54,10 @@ MainLoop:
   call RainbowCopy
 
   ; Clear sprites
-  ld hl, sprites
-  xor a
-.clear_sprites:
-  ld [hl+], a
-  inc l
-  inc l
-  inc l
-  jr nz, .clear_sprites
+  call ClearOAM
 
   ; Run game loop stuff
   call readkeys
-  xor a
-  ldh [oam_ptr], a
   call AdjustCamera
   call RunPlayer
   call RunActors

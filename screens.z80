@@ -18,22 +18,33 @@
 SECTION "screens", ROM0
 
 ShowTitle:
-  call ClearNametable
+  ; Decompress title level
+  ld de, title
+  call DecompressMap
+  call RenderLevel
+  call UploadLevelPalette
 
+  ; "Forehead"
   ld hl, TitleText1
-  ld de, SCREEN1+4+6*32
-  ld c, 9
+  ld de, SCREEN1+2+6*32
+  ld c, 8
   call memcpy8
-
+  ; "Block Guy"
   ld hl, TitleText2
-  ld de, SCREEN1+4+7*32
+  ld de, SCREEN1+3+7*32
   ld c, 9
   call memcpy8
 
-  call UploadTitlePalette
+  call ClearOAM
+  call RunPlayer
+
+  ; Clear sprites
+  ld a, sprites>>8
+  call run_dma
 
   call ScreenOn
 
+  ; Wait for player to press A
 .loop:
   call wait_vblank
   call readkeys
@@ -43,9 +54,13 @@ ShowTitle:
 
   call ScreenOff
 
+  call ClearOAM
+
   jp MainInit
 
 TitleText1:
-  db " Forehead"
+  db "Forehead"
 TitleText2:
   db "Block Guy"
+PressStart:
+  db "Push Start!"

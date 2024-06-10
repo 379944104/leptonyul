@@ -263,6 +263,18 @@ GetRandomNumber:
 
 ; -----------------------------------------
 
+ClearOAM:
+  ld hl, sprites
+  xor a
+  ldh [oam_ptr], a
+.clear_sprites:
+  ld [hl+], a
+  inc l
+  inc l
+  inc l
+  jr nz, .clear_sprites
+  ret
+
 InitGameBoyColor:
   xor a
   ldh [$FF4F], a ; VRAM bank

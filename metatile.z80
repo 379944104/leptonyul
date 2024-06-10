@@ -194,7 +194,7 @@ Metatiles:
   db $b6, $b7, $c6, $c7
 
   ; fence
-  db $b8, $b9, $e8, $e9
+  db $b8, $b9, $c8, $c9
   ; grass
   db "  ", $ba, $bb
   ; flower 1

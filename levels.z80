@@ -100,6 +100,7 @@ SampleEnemyList:
   db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
   db 0
 include "levels/map1.s"
+include "levels/title.s"
 
 ;--------------------------------
 ; level decompression
@@ -126,13 +127,6 @@ LoadLevel:
   add h
   ld hl, LevelHeaders
   add_hl_a
-
-  ; Clear level map first
-  push hl
-  ld hl, level_map
-  ld bc, 8
-  call memclear
-  pop hl
 
   ; Get level map pointer
   ld a, [hl+]
@@ -164,6 +158,10 @@ LoadLevel:
 
 ; Decompresses map DE into RAM
 DecompressMap:
+  ld hl, level_map
+  ld bc, 256
+  call memclear
+DecompressMapLoop:
   ; Read type
   ld a, [de]
   inc de
@@ -251,7 +249,7 @@ DecompressMap:
   ; falls into .done
 .done:
   pop de
-  jp DecompressMap
+  jp DecompressMapLoop
 
 .exit:
   pop de
