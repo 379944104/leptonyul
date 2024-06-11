@@ -31,6 +31,12 @@ MainInit:
   ld a, [RainbowLUT+1]
   ld [RainbowRGBData+1], a
 
+  ld hl, PausedText
+  ld de, SCREEN2+7
+  ld c, 6
+  call memcpy8
+
+  xor a
   call LoadLevel
   call RenderLevel
   call UploadLevelPalette
@@ -121,13 +127,13 @@ MainLoop:
   ldh [EnemyList+1], a
 .no_spawn_enemy:
 
-  ; Display health
+  ; Move OAM pointer ahead to make room for health
   ld h, sprites>>8
   ldh a, [oam_ptr]
   ld l, a
   add 4
   ldh [oam_ptr], a
-
+  ; Display health count
   ld a, 16+2
   ld [hl+], a
   ld a, 8+2
@@ -138,4 +144,29 @@ MainLoop:
   xor a
   ld [hl+], a
 
+  ldh a, [KeyNew]
+  and KEY_START
+  jp z, MainLoop
+Paused:
+  call wait_vblank
+
+  ld a, 7
+  ldh [rWX], a
+  ld a, 144-8
+  ldh [rWY], a
+  ld a, LCDCF_ON|LCDCF_OBJ8|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800|LCDCF_WINON|LCDCF_WIN9C00
+  ldh [rLCDC],a
+
+.loop:
+  call wait_vblank
+  call readkeys
+  ldh a, [KeyNew]
+  and KEY_START
+  jr z, .loop
+
+  ld a, LCDCF_ON|LCDCF_OBJ8|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800
+  ldh [rLCDC],a
   jp MainLoop
+
+PausedText:
+  db "Paused"
