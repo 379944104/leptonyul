@@ -448,6 +448,7 @@ RenderLevel:
   ret nz
 
 RenderLevelColor:
+  ; Second VRAM bank
   ld a, 1
   ldh [$ff4f], a
 

@@ -61,7 +61,7 @@ joypad:
 
 memclear:
   xor a
-  ldi [hl], a
+  ld [hl+], a
   dec bc
   ld a,b
   or c
@@ -70,7 +70,7 @@ memclear:
 
 memset:
   ld a, e
-  ldi [hl], a
+  ld [hl+], a
   dec bc
   ld a,b
   or c
@@ -78,7 +78,7 @@ memset:
   ret
 
 memcpy:
-  ldi a, [hl]
+  ld a, [hl+]
   ld [de], a
   inc de
   dec bc
@@ -102,7 +102,7 @@ memset8:
   ret
 
 strcpy:
-  ldi a, [hl]
+  ld a, [hl+]
   or a
   ret z
   ld [de], a
@@ -199,9 +199,9 @@ DoKeyRepeat:
   ret
 
 ClearNametable:
-; Initialize nametable
+; Initialize nametables
   ld hl, SCREEN1
-  ld bc, 1024
+  ld bc, 1024*2
   ld e, " "
   jp memset
 
@@ -383,11 +383,11 @@ BG_Palette:
   RGB_Color  0,  0,  0
   RGB_Color 13, 13, 13
   RGB_Color 22, 22, 22
-; 7
-  RGB_Color 17, 19, 31
+; 7 inverted
   RGB_Color  0,  0,  0
-  RGB_Color 13, 13, 13
+  RGB_Color 31, 31, 31
   RGB_Color 22, 22, 22
+  RGB_Color 13, 13, 13
 
 Sprite_Palette:
 ; Sprite palette

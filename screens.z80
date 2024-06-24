@@ -35,6 +35,26 @@ ShowTitle:
   ld c, 9
   call memcpy8
 
+  ; On the Game Boy Color, invert the title
+  ldh a, [IsGameBoyColor]
+  cp $11
+  jr nz, .NotColor
+  ; Second VRAM bank
+  ld a, 1
+  ldh [$ff4f], a
+  ; Make the bottom row inverted
+  ld hl, SCREEN1+2+6*32
+  ld a, 7
+  ld c, 10
+  call memset8
+  ld hl, SCREEN1+2+7*32
+  ld c, 10
+  call memset8
+  ; First VRAM bank
+  xor a
+  ldh [$ff4f], a
+.NotColor:
+
   call ClearOAM
   call RunPlayer
 

@@ -31,10 +31,29 @@ MainInit:
   ld a, [RainbowLUT+1]
   ld [RainbowRGBData+1], a
 
+  ; Write the paused text
   ld hl, PausedText
   ld de, SCREEN2+7
   ld c, 6
   call memcpy8
+
+  ; On the Game Boy Color, make the paused text inverted
+  ldh a, [IsGameBoyColor]
+  cp $11
+  jr nz, .NotColor
+  ; Second VRAM bank
+  ld a, 1
+  ldh [$ff4f], a
+  ; Palette 7
+  ld hl, SCREEN2
+  ld a, 7
+  ld c, 20
+  call memset8
+  ; First VRAM bank
+  xor a
+  ldh [$ff4f], a
+.NotColor:
+
 
   xor a
   call LoadLevel
