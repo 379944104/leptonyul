@@ -74,6 +74,16 @@ Init:
   ld b, 128
   call pb16_unpack_block
 
+  ; Use different enemy indicator on regular Game Boy
+  ldh a, [IsGameBoyColor]
+  cp $11
+  jr z, .IsColor
+  ld hl, gb_indicator
+  ld de, VRAM_LOW+($21*16)
+  ld c, 16
+  call memcpy8
+.IsColor:
+
   ; Clear the rest of VRAM
   ld hl, VRAM_LOW+$1800
   ld bc, $0800
@@ -89,3 +99,5 @@ Init:
 
 graphics:
 INCBIN "fhbg.pb16"
+gb_indicator:
+INCBIN "gb_indicator.chr"
