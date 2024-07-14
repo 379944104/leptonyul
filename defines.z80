@@ -19,4 +19,5 @@
   enum_elem ACTOR_BALL_ROLL
   enum_elem ACTOR_THWOMP
   enum_elem ACTOR_MINE
+  enum_elem ACTOR_NUMBER_LEFT
 

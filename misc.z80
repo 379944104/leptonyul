@@ -87,6 +87,8 @@ memcpy:
   jr nz, memcpy
   ret
 
+memclear8:
+  xor a
 memcpy8:
   ld a, [hl+]
   ld [de], a
@@ -409,7 +411,7 @@ Sprite_Palette:
 ; 3 yellow
   RGB_Color  0,  0,  0
   RGB_Color  0,  0,  0
-  RGB_Color 31, 31,  0
+  RGB_Color 31, 15,  0
   RGB_Color 31, 31, 31
 ; 4
   RGB_Color  0,  0,  0

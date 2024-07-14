@@ -119,21 +119,34 @@ ActorBlock:
   ld a, $08
   jp DrawActorWithoutFlip
 
+ActorNumberLeft:
+  call ActorScreenPositionOffset
+
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4
+  ldh [oam_ptr], a
+
+  ld a, b
+  ld [hl+], a
+  ld a, c
+  ld [hl+], a
+  ldh a, [ChipsNeeded]
+  or $80
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
+  jp ActorPoof.IncreaseTimer
 
 ActorPoof:
-  call ActorScreenPosition
+  call ActorScreenPositionOffset
 
   ld hl, actor_timer
   add hl, de
   push de
   ld d, [hl]       ; D = timer
-
-  ldh a, [temp+0]
-  add 4
-  ld b, a          ; B = Y pos
-  ldh a, [temp+1]
-  add 4
-  ld c, a          ; C = X pos
 
   ld h, sprites>>8
   ldh a, [oam_ptr]
@@ -187,6 +200,7 @@ ActorPoof:
   ld [hl+], a
   pop de
 
+.IncreaseTimer:
   ; Increase timer
   ld hl, actor_timer
   add hl, de
@@ -212,9 +226,49 @@ ActorBottle:
   ret
 
 ActorChip:
+  ld a, $10
+  call EnemyFlying
+
+  ; No stunning
+  ld hl, actor_state
+  add hl, de
+  ld [hl], 0
+
   ld a, $0c
-  ld b, 0
-  jp DrawActorWithoutFlip
+  ld b, 3
+  call DrawActorWithoutFlip
+
+  call EnemyPlayerTouch
+  ret nc
+
+  ; Make the "chips left" counter
+  call EnemyFindFree
+  ret nc
+  ; Copy in position
+  push de
+  ; Set type
+  ld [hl], ACTOR_NUMBER_LEFT
+  inc l
+  inc e
+  ld b, 7 ; Copy position bytes and state
+.loop:
+  ld a, [de]
+  inc de
+  ld [hl+], a
+  dec b
+  jr nz, .loop
+  pop de
+  ; Set timer
+  ld [hl], low(-20)
+
+  cooldown [ChipsNeeded]
+
+  ; Go to a random spot
+  ld hl, actor_pxl
+  add hl, de
+  xor a
+  ld [hl+], a
+  jp EnemyFlying.PickRandomSpot
 
 ActorKey:
   ld a, $10
@@ -591,6 +645,39 @@ EnemyCollideWithPlayer:
   ld [de], a
   ret
 
+EnemyPlayerTouch:
+  ld hl, actor_pixely
+  add hl, de
+
+  ldh a, [CameraPY]
+  add [hl]
+  ld b, a ; B = non-scrolled pixel Y position
+  inc l
+  ldh a, [CameraPX]
+  add [hl]
+  ld c, a ; C = non-scrolled pixel X position
+
+  ; Colliding vertically?
+  ldh a, [PlayerPY]
+  scf
+  sbc b ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (24+16-1) ;Carry set if overlap
+  ret nc
+
+  ; Colliding horizontally?
+  ldh a, [PlayerPX]
+  add 4
+  scf
+  sbc c ; Note will subtract n-1
+  sbc (16-1)
+  ccf
+  adc (8+16-1) ;Carry set if overlap
+  ret nc
+  scf
+  ret
+
 EnemyTurnAround:
   ld a, [de]
   xor 128
@@ -609,7 +696,6 @@ EnemyFourFrameAnimation:
 
 EnemyFlying:
   call EnemyMoveForward
-  
   ld hl, actor_pxl
   add hl, de
   ld a, [hl+]
@@ -618,7 +704,7 @@ EnemyFlying:
   ld a, [hl]
   cp 15
   ret c
-
+.PickRandomSpot:
   ; Pick left or right side
   ld [hl], 0
   ; Direction bit unset (right)
@@ -892,6 +978,16 @@ EnemyDespawnTimer:
 
 ; --------------------------------------------
 
+ActorScreenPositionOffset:
+  call ActorScreenPosition
+  ldh a, [temp+0]
+  add 4
+  ld b, a          ; B = Y pos
+  ldh a, [temp+1]
+  add 4
+  ld c, a          ; C = X pos
+  ret
+
 ActorScreenPosition:
   ld hl, actor_pyl
   add hl, de
@@ -1118,3 +1214,4 @@ ActorPointers:
   dw ActorBallRoll
   dw ActorThwomp
   dw ActorMine
+  dw ActorNumberLeft

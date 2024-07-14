@@ -89,9 +89,7 @@ LVL_H_DIRT    = $C0
   ; m = map pointer, e = enemy list, c = chips needed, L = enemy limit
 LevelHeaders:
   dw map1, SampleEnemyList
-  db $05
-
-
+  db $a5
 
 SampleEnemyList:
   db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER
@@ -135,6 +133,10 @@ LoadLevel:
   ld d, a
   push hl
   call DecompressMap
+  ; Clear enemy list
+  ld hl, actors
+  ld c, 8
+  call memclear8
   pop hl
 
   ; Get enemy pointer
@@ -154,6 +156,11 @@ LoadLevel:
   and 15
   ldh [ChipsNeeded], a
   ldh [IsChipLevel], a
+  jr z, .NotChipLevel
+  ld a, ACTOR_CHIP|128
+  ld [actors+0], a
+  ld [actors+16], a
+.NotChipLevel:
   ret
 
 ; Decompresses map DE into RAM
@@ -263,6 +270,9 @@ DecompressMapLoop:
   swap a
   and 15
   ldh [PlayerPYH], a
+  xor a
+  ldh [PlayerPXL], a
+  ldh [PlayerPYL], a
   ret
 
 .get_multi_count:
