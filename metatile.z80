@@ -17,65 +17,6 @@
 
 SECTION "metatiles", ROM0
 
-  enum_start
-  enum_elem BLOCK_EMPTY
-  enum_elem BLOCK_SOLID
-
-  enum_elem BLOCK_DIRT
-  enum_elem BLOCK_DIRT_D
-  enum_elem BLOCK_DIRT_U
-  enum_elem BLOCK_DIRT_UD
-  enum_elem BLOCK_DIRT_R
-  enum_elem BLOCK_DIRT_RD
-  enum_elem BLOCK_DIRT_RU
-  enum_elem BLOCK_DIRT_RUD
-  enum_elem BLOCK_DIRT_L
-  enum_elem BLOCK_DIRT_LD
-  enum_elem BLOCK_DIRT_LU
-  enum_elem BLOCK_DIRT_LUD
-  enum_elem BLOCK_DIRT_LR
-  enum_elem BLOCK_DIRT_LRD
-  enum_elem BLOCK_DIRT_LRU
-  enum_elem BLOCK_DIRT_LRUD
-
-  enum_elem BLOCK_WATER
-  enum_elem BLOCK_WATER_TOP
-
-  enum_elem BLOCK_LADDER
-  enum_elem BLOCK_SPRING
-  enum_elem BLOCK_PRESSED_SPRING
-  enum_elem BLOCK_LOCK
-
-  enum_elem BLOCK_FENCE
-  enum_elem BLOCK_GRASS
-  enum_elem BLOCK_FLOWER1
-  enum_elem BLOCK_FLOWER2
-
-  enum_elem BLOCK_PLATFORM
-  enum_elem BLOCK_PLATFORM_L
-  enum_elem BLOCK_PLATFORM_R
-  enum_elem BLOCK_PLATFORM_LR
-  enum_elem BLOCK_FALL_PLATFORM
-  enum_elem BLOCK_FALL_PLATFORM_L
-  enum_elem BLOCK_FALL_PLATFORM_R
-  enum_elem BLOCK_FALL_PLATFORM_LR
-  enum_elem BLOCK_CHECKER
-  enum_elem BLOCK_CHECKER_D
-  enum_elem BLOCK_CHECKER_U
-  enum_elem BLOCK_CHECKER_UD
-  enum_elem BLOCK_CHECKER_R
-  enum_elem BLOCK_CHECKER_RD
-  enum_elem BLOCK_CHECKER_RU
-  enum_elem BLOCK_CHECKER_RUD
-  enum_elem BLOCK_CHECKER_L
-  enum_elem BLOCK_CHECKER_LD
-  enum_elem BLOCK_CHECKER_LU
-  enum_elem BLOCK_CHECKER_LUD
-  enum_elem BLOCK_CHECKER_LR
-  enum_elem BLOCK_CHECKER_LRD
-  enum_elem BLOCK_CHECKER_LRU
-  enum_elem BLOCK_CHECKER_LRUD
-
 META_SOLID_ALL = $c0 ; top two bits
 META_SOLID_TOP = $40 ; second to top bit only
 META_COLOR0 = $00
@@ -174,7 +115,7 @@ Metatiles:
   db $f1, $f2, $fa, $fb ; l...
   db $f1, $f2, $f3, $e1 ; l..d
   db $f3, $e1, $fa, $fb ; l.u.
-  db $f3, $f3, $fa, $fa ; l.ud
+  db $f3, $e1, $f3, $e1 ; l.ud
   db $f1, $f1, $fa, $fa ; lr..
   db $f1, $f1, $f3, $f3 ; lr.d
   db $f3, $f3, $fa, $fa ; lru.

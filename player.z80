@@ -687,6 +687,9 @@ IsSolid: ; carry = clear if solid, set if nonsolid
   cp 128
   pop hl
   ret
+EnemyIsSolidOnTop: ; carry = clear if solid, set if nonsolid
+  cp BLOCK_LADDER
+  jr z, IsSolidOnTop.is_ladder
 IsSolidOnTop: ; carry = clear if solid, set if nonsolid
   push hl
   ld hl, MetatileFlags
@@ -694,4 +697,7 @@ IsSolidOnTop: ; carry = clear if solid, set if nonsolid
   ld a, [hl]
   cp 64
   pop hl
+  ret
+.is_ladder:
+  or a
   ret

@@ -87,8 +87,6 @@ memcpy:
   jr nz, memcpy
   ret
 
-memclear8:
-  xor a
 memcpy8:
   ld a, [hl+]
   ld [de], a
@@ -97,6 +95,8 @@ memcpy8:
   jr nz, memcpy8
   ret
 
+memclear8:
+  xor a
 memset8:
   ld [hl+], a
   dec c

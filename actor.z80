@@ -901,7 +901,7 @@ EnemyStandingOnSolid:
   add b
   ld e, a
   ld a, [de]
-  call IsSolid
+  call EnemyIsSolidOnTop
   ccf
   rl c
 
@@ -913,7 +913,7 @@ EnemyStandingOnSolid:
   add b
   ld e, a
   ld a, [de]
-  call IsSolid
+  call EnemyIsSolidOnTop
   ccf
   rl c
   

@@ -55,7 +55,7 @@ MainInit:
 .NotColor:
 
 
-  xor a
+  ldh a, [LevelNumber]
   call LoadLevel
   call RenderLevel
   call UploadLevelPalette
@@ -162,6 +162,18 @@ MainLoop:
   ld [hl+], a
   xor a
   ld [hl+], a
+
+
+  ldh a, [KeyNew]
+  and KEY_SELECT
+  jr z, .not_skip
+  ldh a, [LevelNumber]
+  inc a
+  ldh [LevelNumber], a
+  call ScreenOff
+  jp MainInit
+.not_skip:
+
 
   ldh a, [KeyNew]
   and KEY_START

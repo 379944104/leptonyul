@@ -49,6 +49,7 @@ KeyLast:        db ; Keys pressed last frame
 KeyNew:         db ; Keys pressed this frame that weren't last frame
 KeyRepeat:      db ; Timer for key repeat
 
+LevelNumber:    db
 IsChipLevel:    db
 ChipsNeeded:    db
 EnemyListStart: ds 2 ; Pointer to start of enemy list

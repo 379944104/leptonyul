@@ -89,7 +89,20 @@ LVL_H_DIRT    = $C0
   ; m = map pointer, e = enemy list, c = chips needed, L = enemy limit
 LevelHeaders:
   dw map1, SampleEnemyList
-  db $a5
+  db $05
+
+  dw map2, SampleEnemyList
+  db $05
+
+  dw map3, SampleEnemyList
+  db $05
+
+  dw map4, SampleEnemyList
+  db $05
+
+  dw map5, SampleEnemyList
+  db $05
+
 
 SampleEnemyList:
   db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER
@@ -98,6 +111,10 @@ SampleEnemyList:
   db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
   db 0
 include "levels/map1.s"
+include "levels/map2.s"
+include "levels/map3.s"
+include "levels/map4.s"
+include "levels/map5.s"
 include "levels/title.s"
 
 ;--------------------------------
@@ -135,7 +152,7 @@ LoadLevel:
   call DecompressMap
   ; Clear enemy list
   ld hl, actors
-  ld c, 8
+  ld c, 0
   call memclear8
   pop hl
 
