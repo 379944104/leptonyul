@@ -52,6 +52,10 @@ KeyRepeat:      db ; Timer for key repeat
 LevelNumber:    db
 IsChipLevel:    db
 ChipsNeeded:    db
+
+LevelComplete:  db
+LevelCompleteTimer: db
+
 EnemyListStart: ds 2 ; Pointer to start of enemy list
 EnemyList:      ds 2 ; Pointer to an enemy list
 

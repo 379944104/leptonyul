@@ -31,6 +31,10 @@ MainInit:
   ld a, [RainbowLUT+1]
   ld [RainbowRGBData+1], a
 
+  xor a
+  ldh [LevelComplete], a
+  ldh [LevelCompleteTimer], a
+
   ; Write the paused text
   ld hl, PausedText
   ld de, SCREEN2+7
@@ -107,7 +111,12 @@ MainLoop:
   ; If it's not a chip level, stop spawning enemies
   ldh a, [IsChipLevel]
   or a
-  jr z, .no_spawn_enemy
+  jr nz, .is_chip_level
+  ; and also mark the level complete
+  ld a, 1
+  ldh [LevelComplete], a
+  jr .no_spawn_enemy
+.is_chip_level
 
   ; If it is, move to the start of the list
   ldh a, [EnemyListStart+0]
@@ -164,9 +173,24 @@ MainLoop:
   ld [hl+], a
 
 
+
+  ; If the level is complete, run up a timer
+  ; and then exit it
+  ldh a, [LevelComplete]
+  or a
+  jr z, .not_complete
+  ldh a, [LevelCompleteTimer]
+  inc a
+  ldh [LevelCompleteTimer], a
+  cp 30
+  jr nc, NextLevel
+.not_complete:
+
+
   ldh a, [KeyNew]
   and KEY_SELECT
-  jr z, .not_skip
+  jr z, NextLevel.not_skip
+NextLevel:
   ldh a, [LevelNumber]
   inc a
   ldh [LevelNumber], a

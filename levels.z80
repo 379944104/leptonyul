@@ -89,7 +89,7 @@ LVL_H_DIRT    = $C0
   ; m = map pointer, e = enemy list, c = chips needed, L = enemy limit
 LevelHeaders:
   dw map1, SampleEnemyList
-  db $05
+  db $35
 
   dw map2, SampleEnemyList
   db $05
@@ -98,10 +98,10 @@ LevelHeaders:
   db $05
 
   dw map4, SampleEnemyList
-  db $05
+  db $a5
 
   dw map5, SampleEnemyList
-  db $05
+  db $a5
 
 
 SampleEnemyList:

@@ -261,7 +261,17 @@ ActorChip:
   ; Set timer
   ld [hl], low(-20)
 
-  cooldown [ChipsNeeded]
+  ; Decrement chips needed, signal level is complete if it's 0
+  ldh a, [ChipsNeeded]
+  or a
+  jr z, .NotFinished
+  dec a
+  ldh [ChipsNeeded], a
+  jr nz, .NotFinished
+  ld a, 1
+  ld [LevelComplete], a
+.NotFinished:
+
 
   ; Go to a random spot
   ld hl, actor_pxl

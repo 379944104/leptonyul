@@ -208,6 +208,7 @@ RunPlayer:
   ldh [PlayerPYL], a
   ldh a, [PlayerPYH]
   adc b
+  and 15
   ldh [PlayerPYH], a
 
   call PlayerLevelCollision
