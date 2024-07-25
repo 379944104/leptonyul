@@ -68,6 +68,7 @@ MainInit:
 
   ; Erase all initial sprites
   call wait_vblank
+  call ClearOAM
   ld a, sprites>>8
   call run_dma
 
@@ -112,7 +113,20 @@ MainLoop:
   ldh a, [IsChipLevel]
   or a
   jr nz, .is_chip_level
-  ; and also mark the level complete
+
+  ; Have all enemies been defeated?
+  ld h, actors>>8
+  ld l, 0
+.enemy_scan_loop:
+  ld a, [hl]
+  or a
+  jr nz, .no_spawn_enemy
+  ld a, l
+  add 16
+  ld l, a
+  jr nz, .enemy_scan_loop
+
+  ; Mark the level complete
   ld a, 1
   ldh [LevelComplete], a
   jr .no_spawn_enemy
