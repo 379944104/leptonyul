@@ -17,6 +17,44 @@
 
 SECTION "camera", ROM0
 
+InitCamera:
+  ;X
+  ldh a, [PlayerPXL]
+  ld e, a
+  ldh a, [PlayerPXH]
+  sub 10/2
+  jr nc, .not_snap_l
+    xor a
+    ldh [CameraX], a
+.not_snap_l:
+  cp 16-10
+  jr c, .not_snap_r
+    xor a
+    ldh [CameraX], a
+    ld a, 16-10
+.not_snap_r:
+  ldh [CameraX+1], a
+
+  ; Y
+  ld a, [PlayerPYL]
+  ldh [CameraY], a
+  ld a, [PlayerPYH]
+  sub 9/2
+  jr nc, .not_snap_u
+    xor a
+    ldh [CameraY], a
+.not_snap_u:
+  cp 16-9
+  jr c, .not_snap_d
+    xor a
+    ldh [CameraY], a
+    ld a, 16-9
+.not_snap_d:
+  ldh [CameraY+1], a
+
+  jp AdjustCamera.convert
+
+
 AdjustCamera:
   ; Get scroll target
   ldh a, [PlayerPXL]
@@ -112,6 +150,7 @@ AdjustCamera:
 
 ; ---------------------------------------
 
+.convert:
   ; Convert camera to pixel coordinates
   ldh a, [CameraX+1]
   ld b, a
