@@ -35,6 +35,9 @@ InitCamera:
 .not_snap_r:
   ldh [CameraX+1], a
 
+  ldh a, [CameraLimitBottom]
+  ld b, a
+
   ; Y
   ld a, [PlayerPYL]
   ldh [CameraY], a
@@ -44,11 +47,11 @@ InitCamera:
     xor a
     ldh [CameraY], a
 .not_snap_u:
-  cp 16-9
+  cp b ; Compare against limit
   jr c, .not_snap_d
     xor a
     ldh [CameraY], a
-    ld a, 16-9
+    ld a, b ; Set to limit
 .not_snap_d:
   ldh [CameraY+1], a
 
@@ -112,11 +115,12 @@ AdjustCamera:
     xor a
     ld e, a
 .not_snap_u:
-  cp 16-9
+  ld hl, CameraLimitBottom
+  cp [hl] ; Compare against limit
   jr c, .not_snap_d
     xor a
     ld e, a
-    ld a, 16-9
+    ld a, [hl] ; Set to limit
 .not_snap_d:
   ld d, a
 

@@ -1,6 +1,6 @@
 map5:
   db LVL_V_CHECKER|$b, $0
-  db LVL_RECT|LVL_DIRT,    $e0, $1f
+  db LVL_H_DIRT|$f, $e0
   db LVL_V_CHECKER|$4, $f
   db LVL_H_CHECKER|$4, $1
   db LVL_H_CHECKER|$4, $a

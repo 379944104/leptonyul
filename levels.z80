@@ -178,6 +178,21 @@ LoadLevel:
   ld [actors+0], a
   ld [actors+16], a
 .NotChipLevel:
+
+  ; Detect level height
+  ld hl, level_map+255
+.LevelHeightLoop:
+  ld a, [hl-]
+  or a
+  jr z, .LevelHeightLoop
+
+  ; Store level height and vertical camera limit
+  ld a, l
+  swap a
+  and 15
+  ldh [LevelHeight], a
+  sub 8 ;9-1
+  ldh [CameraLimitBottom], a
   ret
 
 ; Decompresses map DE into RAM

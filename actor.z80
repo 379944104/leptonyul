@@ -736,12 +736,16 @@ EnemyFlying:
   ld [hl], 0
   dec l
 
+  ; Pick a random Y position
+  ; and try until it works
+  ldh a, [LevelHeight]
+  ld b, a
 .loop:
   call GetRandomNumber
+  inc a
   and 15
-  cp 12
+  cp b
   jr nc, .loop
-  add 2
 
   ld [hl-], a
   xor a

@@ -38,6 +38,8 @@ CameraX:        ds 2
 CameraPX:       ds 2
 CameraY:        ds 2
 CameraPY:       ds 2
+CameraLimitBottom: db ; 16-9 for full-height levels
+LevelHeight:       db ; level height in blocks
 
 CursorX:        db ; X position of cursor, in cells
 CursorY:        db ; Y position of cursor, in cells
