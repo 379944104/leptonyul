@@ -25,26 +25,6 @@ RunPlayer:
   cooldown [PlayerShootCooldown]
   cooldown [PlayerInvincible]
 
-;  bit 7, b
-;  jr z, .NotDown
-;  ldh a, [PlayerPYL]
-;  add 16
-;  ldh [PlayerPYL], a
-;  ldh a, [PlayerPYH]
-;  adc 0
-;  ldh [PlayerPYH], a
-;.NotDown:
-
-;  bit 6, b
-;  jr z, .NotUp
-;  ldh a, [PlayerPYL]
-;  sub 16
-;  ldh [PlayerPYL], a
-;  ldh a, [PlayerPYH]
-;  sbc 0
-;  ldh [PlayerPYH], a
-;.NotUp:
-
   ; Jump cancel
   ldh a, [KeyDown]
   and KEY_A
@@ -136,6 +116,34 @@ RunPlayer:
   ldh a, [KeyDown]
   ld b, a
 
+  ld a, [PlayerClimbing]
+  or a
+  jr z, .NotClimbing
+  bit 7, b
+  jr z, .NotDown
+  ldh a, [PlayerPYL]
+  add 32
+  ldh [PlayerPYL], a
+  ld [PlayerScrollPYL], a
+  ldh a, [PlayerPYH]
+  adc 0
+  ldh [PlayerPYH], a
+  ld [PlayerScrollPYH], a
+.NotDown:
+
+  bit 6, b
+  jr z, .NotUp
+  ldh a, [PlayerPYL]
+  sub 32
+  ldh [PlayerPYL], a
+  ld [PlayerScrollPYL], a
+  ldh a, [PlayerPYH]
+  sbc 0
+  ldh [PlayerPYH], a
+  ld [PlayerScrollPYH], a
+.NotUp:
+.NotClimbing:
+
   bit 5, b
   jr z, .NotLeft
   ldh a, [PlayerPXL]
@@ -180,6 +188,11 @@ RunPlayer:
   ldh [PlayerPXL],a
 .NotRight:
 
+
+  ld a, [PlayerClimbing]
+  or a
+  jr nz, .PlayerNoGravity
+
   ; Increase gravity
   ldh a, [PlayerVYL]
   ld c, a
@@ -210,8 +223,38 @@ RunPlayer:
   adc b
   and 15
   ldh [PlayerPYH], a
+.PlayerNoGravity:
 
   call PlayerLevelCollision
+
+LadderCollision:
+  ld h, level_map>>8
+  call PlayerGetMiddle
+  call PlayerGetMiddleX
+  cp BLOCK_LADDER
+  jr z, .yes
+
+  call PlayerGetBottom
+  call PlayerGetMiddleX
+  cp BLOCK_LADDER
+  jr nz, .not_ladder
+
+.yes:
+  ldh a, [KeyDown]
+  and KEY_UP|KEY_DOWN
+  jr z, .was_ladder
+  xor a
+  ldh [PlayerVYL], a
+  ldh [PlayerVYH], a
+  ld a, 1
+  ld [PlayerClimbing], a
+  call OfferJump
+  jr .was_ladder
+
+.not_ladder:
+  xor a
+  ld [PlayerClimbing], a
+.was_ladder:
 
 DrawPlayer:
   ld a, [PlayerInvincible]
@@ -473,6 +516,26 @@ PlayerLevelCollision:
   and 128
   jr nz, .going_up
 
+  ; If you're not climbing, and the ladder has a solid block
+  ; to the left or right, then it's solid on the top.
+  ld a, [PlayerClimbing]
+  or a
+  jr nz, .is_climbing
+  pop af   ; Get the value on the stack (block number)
+  push af
+  cp BLOCK_LADDER
+  jr nz, .is_climbing
+  ; Check the left and right
+  dec l
+  ld a, [hl+]
+  call IsSolidOnTop
+  jr nc, .yes_from_ladder
+  inc l
+  ld a, [hl]
+  call IsSolidOnTop
+  jr nc, .yes_from_ladder
+.is_climbing:
+
   ldh a, [PlayerPYL]
   and 128
   jp z, SolidAllInstead
@@ -483,8 +546,10 @@ PlayerLevelCollision:
   add_hl_a
   ld a, [hl]
   cp 64
-  pop hl
-  ret
+.yes_from_ladder:
+  pop hl ; pops wrong register pair when branching here
+  ret    ; but that doesn't matter
+
 .reactions:
   dw .reaction____________
   dw .reaction__________dr
@@ -635,6 +700,7 @@ OfferJumpFromGracePeriod:
   xor a
   ld [OfferJumpTimer], a
   ld [PlayerJumpCancel], a
+  ld [PlayerClimbing], a
   ret
 
 ; These four routines assist with player/level collision
@@ -672,6 +738,14 @@ PlayerGetLeft:
 PlayerGetRight:
   ldh a, [PlayerPXL]
   add $ff - COLLISION_OFFX
+  ldh a, [PlayerPXH]
+  adc L
+  ld l, a
+  ld a, [hl]
+  ret
+PlayerGetMiddleX:
+  ldh a, [PlayerPXL]
+  add $80
   ldh a, [PlayerPXH]
   adc L
   ld l, a

@@ -1,4 +1,4 @@
-SECTION "vars", WRAM0
+SECTION "vars", WRAM0[$C000]
 sprites:   ds 256 ; Sprite page
 level_map: ds 256 ; Level blocks
 actors:    ds 256 ; Actor information
@@ -9,6 +9,7 @@ PlayerShootCooldown: db
 PlayerJumpCancel: db
 PlayerHealth:     db
 PlayerInvincible: db
+PlayerClimbing:   db  ; 1 if on ladder
 
 EnemyLimit:       db  ; how many enemies are allowed at once
 EnemyCount:       db  ; enemies this frame
