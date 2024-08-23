@@ -240,6 +240,7 @@ LadderCollision:
   jr nz, .not_ladder
 
 .yes:
+  call OfferJump
   ldh a, [KeyDown]
   and KEY_UP|KEY_DOWN
   jr z, .was_ladder
@@ -248,7 +249,6 @@ LadderCollision:
   ldh [PlayerVYH], a
   ld a, 1
   ld [PlayerClimbing], a
-  call OfferJump
   jr .was_ladder
 
 .not_ladder:
