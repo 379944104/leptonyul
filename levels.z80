@@ -304,6 +304,7 @@ DecompressMapLoop:
   ldh [PlayerPYH], a
   xor a
   ldh [PlayerPXL], a
+  ld a, $80
   ldh [PlayerPYL], a
   ret
 

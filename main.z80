@@ -18,10 +18,6 @@
 SECTION "main", ROM0
 
 MainInit:
-  ld a, 4
-  ld [PlayerHealth], a
-  ld [EnemyLimit], a
-
   ld a, 7
   ld [RainbowRGBPIndex], a
   ld a, $80|$3c
@@ -31,9 +27,14 @@ MainInit:
   ld a, [RainbowLUT+1]
   ld [RainbowRGBData+1], a
 
+  ld a, 4
+  ld [PlayerHealth], a
+  ld [EnemyLimit], a
+
   xor a
   ldh [LevelComplete], a
   ldh [LevelCompleteTimer], a
+  ld [RainbowRGBTIndex], a
 
   ; Write the paused text
   ld hl, PausedText

@@ -53,3 +53,13 @@ cooldown: MACRO
   ld \1, a
 .no\@:
 ENDM
+
+vram_bank_0: MACRO
+  xor a
+  ldh [$ff4f], a
+ENDM
+
+vram_bank_1: MACRO
+  ld a, 1
+  ldh [$ff4f], a
+ENDM

@@ -22,4 +22,4 @@ map5:
   db LVL_RECT|LVL_DIRT,    $81, $20
   db LVL_RECT|LVL_DIRT,    $92, $10
   db LVL_DIRT,    $a3
-  db LVL_DONE, $d8
+  db LVL_DONE, $c8

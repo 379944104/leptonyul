@@ -231,6 +231,14 @@ LadderCollision:
   ld h, level_map>>8
   call PlayerGetMiddle
   call PlayerGetMiddleX
+  cp BLOCK_SPRING
+  jr nz, .not_spring
+    ld a, low(-$54)
+    ldh [PlayerVYL],a
+    ld a, high(-$54)
+    ldh [PlayerVYH],a
+  jr .was_ladder
+.not_spring:
   cp BLOCK_LADDER
   jr z, .yes
 

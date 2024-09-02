@@ -27,21 +27,17 @@ ShowTitle:
   ; "Forehead"
   ld hl, TitleText1
   ld de, SCREEN1+2+6*32
-  ld c, 8
-  call memcpy8
+  call strcpy
   ; "Block Guy"
   ld hl, TitleText2
   ld de, SCREEN1+3+7*32
-  ld c, 9
-  call memcpy8
+  call strcpy
 
   ; On the Game Boy Color, invert the title
   ldh a, [IsGameBoyColor]
   cp $11
   jr nz, .NotColor
-  ; Second VRAM bank
-  ld a, 1
-  ldh [$ff4f], a
+  vram_bank_1
   ; Make the bottom row inverted
   ld hl, SCREEN1+2+6*32
   ld a, 7
@@ -50,9 +46,7 @@ ShowTitle:
   ld hl, SCREEN1+2+7*32
   ld c, 10
   call memset8
-  ; First VRAM bank
-  xor a
-  ldh [$ff4f], a
+  vram_bank_0
 .NotColor:
 
   call ClearOAM
@@ -67,8 +61,19 @@ ShowTitle:
   ; Wait for player to press A
 .loop:
   call wait_vblank
+  ; Copy player sprite
+  ld a, sprites>>8
+  call run_dma
+
+  ; Run the player routine without allowing any key presses
+  call ClearOAM
+  xor a
+  ldh [KeyDown], a
+  ldh [KeyNew], a
+  call RunPlayer
+
   call readkeys
-  ldh a, [KeyDown]
+  ldh a, [KeyNew]
   and KEY_A
   jr z, .loop
 
@@ -76,11 +81,215 @@ ShowTitle:
 
   call ClearOAM
 
-  jp MainInit
+  jp ShowMainMenu
 
 TitleText1:
-  db "Forehead"
+  db "Forehead",0
 TitleText2:
-  db "Block Guy"
+  db "Block Guy",0
 PressStart:
-  db "Push Start!"
+  db "Push Start!",0
+
+; ---------------------------------------------------
+
+ShowMainMenu:
+  ; Clear the nametable
+  call ClearNametable
+  ld hl, SCREEN1
+  ld b, 9
+.clear_loop:
+  ld d, 0
+  call .side_border
+  ld d, 2
+  call .side_border
+  dec b
+  jr nz, .clear_loop
+  
+  xor a
+  ldh [MenuCursor], a
+
+  call ClearOAM
+  ld a, sprites>>8
+  call run_dma
+
+  call UploadTitlePalette
+
+  ldh a, [IsGameBoyColor]
+  cp $11
+  jr nz, .NotColor
+  vram_bank_1
+  ; Clear attributes
+  ld hl, SCREEN1
+  ld bc, 1024
+  call memclear
+
+  ; Set color 1 on sides
+  ld b, 18
+  ld hl, SCREEN1
+.attribute_side_loop:
+  ld a, 1
+  ld [hl+], a
+  ld [hl+], a
+  ld a, L
+  add 16
+  ld L, a
+  ld a, 1
+  ld [hl+], a
+  ld [hl], a
+  call .side_border_increment2
+
+  dec b
+  jr nz, .attribute_side_loop
+
+  vram_bank_0
+.NotColor:
+
+  ; Copy the palette in
+  ld hl, .side_palette
+  ld de, temp
+  ld c, 4*2
+  call memcpy8
+  call .color_cycle
+
+  ; Write the four options
+  ld hl, PlayGameText
+  ld de, SCREEN1+5+5*32
+  call strcpy
+  ld hl, HelpGameText
+  ld de, SCREEN1+5+7*32
+  call strcpy
+  ld hl, EditGameText
+  ld de, SCREEN1+5+9*32
+  call strcpy
+  ld hl, CreditsText
+  ld de, SCREEN1+5+11*32
+  call strcpy
+
+  call ScreenOn
+
+; --------------- Main menu loop -----------------
+  ; Reset retraces
+  xor a
+  ldh [retraces], a
+.loop:
+  call wait_vblank
+  ; Draw menu cursor
+  ld a, $20    ; star
+  ld [$fe02],a ; set tile number
+
+  ; Draw the cursor sprite
+  ldh a, [MenuCursor]
+  add a ; * 16
+  add a
+  add a
+  add a
+  add (5*8)+16
+  ld [$fe00], a ; Y position
+  ld a, 8*4+8
+  ld [$fe01], a ; X position
+
+  ; Do color cycling?
+  ldh a, [retraces]
+  and 31
+  call z, .color_cycle
+
+  ; Read and respond to keys
+  call readkeys
+  ldh a, [KeyNew]
+  and KEY_UP
+  jr z, .not_up
+    ldh a, [MenuCursor]
+    dec a
+    and 3
+    ldh [MenuCursor], a
+.not_up:
+
+  ldh a, [KeyNew]
+  and KEY_DOWN
+  jr z, .not_down
+    ldh a, [MenuCursor]
+    inc a
+    and 3
+    ldh [MenuCursor], a
+.not_down:
+
+  ldh a, [KeyNew]
+  and KEY_A
+  jr z, .loop
+
+  call ScreenOff
+
+  jp MainInit
+
+; Paint side borders with tiles D and D+1
+.side_border:
+  ld [hl], d
+  inc l
+  ld [hl], d
+  inc [hl]
+  ld a, L
+  add 17
+  ld L, A
+
+  ld [hl], d
+  inc l
+  ld [hl], d
+  inc [hl]
+; Reused for painting the attributes on
+.side_border_increment2:
+  ld a, L
+  add 32-19
+  ld L, a
+  ret nc
+  inc h
+  ret
+
+; Color cycling palette
+.side_palette:
+  RGB_Color 31, 31, 31
+  RGB_Color (254-30)/8, (196-30)/8, (234-30)/8
+  RGB_Color (189-30)/8, (244-30)/8, (171-30)/8
+  RGB_Color (211-30)/8, (210-30)/8, (255-30)/8
+
+; Write the colors and cycle to the next set
+.color_cycle:
+  ; Write those colors
+  ld a, $80|4*2
+  ldh [$ff68], a ; background palette index
+  ld hl, temp
+  ld c, 8
+.cycle_loop:
+  ld a, [hl+]
+  ldh [$ff69], a
+  dec c
+  jr nz, .cycle_loop
+
+  ; Cycle the colors around
+  ldh a, [temp+3]
+  push af
+  ldh a, [temp+2]
+  push af
+  ldh a, [temp+4]
+  ldh [temp+2], a
+  ldh a, [temp+5]
+  ldh [temp+3], a
+  ldh a, [temp+6]
+  ldh [temp+4], a
+  ldh a, [temp+7]
+  ldh [temp+5], a
+  pop af
+  ldh [temp+6], a
+  pop af
+  ldh [temp+7], a
+  ret
+
+PlayGameText:
+  db "Start game!",0
+HelpGameText:
+  db "How to play",0
+EditGameText:
+  db "Level edit",0
+CreditsText:
+  db "Credits",0
+ExtrasText:
+  db "Extras",0

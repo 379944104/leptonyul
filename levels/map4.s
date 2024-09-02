@@ -12,4 +12,4 @@ map4:
   db LVL_H_PLAT|$4, $25
   db LVL_RECT|LVL_WATER,   $eb, $4
   db LVL_RECT|LVL_WATER,   $e0, $4
-  db LVL_DONE, $97
+  db LVL_DONE, $87

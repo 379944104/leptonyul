@@ -436,7 +436,7 @@ Sprite_Palette:
 
 RainbowCopy:
   ld a, [RainbowRGBCIndex]
-  ldh [$ff6a], a ; background palette index
+  ldh [$ff6a], a ; sprite palette index
   ld a, [RainbowRGBData+0]
   ldh [$ff6b], a
   ld a, [RainbowRGBData+1]

@@ -389,9 +389,7 @@ RenderLevel:
   ret nz
 
 RenderLevelColor:
-  ; Second VRAM bank
-  ld a, 1
-  ldh [$ff4f], a
+  vram_bank_1
 
   ld bc, level_map
   ld de, SCREEN1
@@ -444,8 +442,7 @@ RenderLevelColor:
   
   jr .loop
 .exit:
-  xor a
-  ldh [$ff4f], a
+  vram_bank_0
   ret
 
 .is_flowers:
