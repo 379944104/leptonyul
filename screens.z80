@@ -247,9 +247,9 @@ ShowMainMenu:
 ; Color cycling palette
 .side_palette:
   RGB_Color 31, 31, 31
-  RGB_Color (254-30)/8, (196-30)/8, (234-30)/8
-  RGB_Color (189-30)/8, (244-30)/8, (171-30)/8
-  RGB_Color (211-30)/8, (210-30)/8, (255-30)/8
+  RGB_Color (254)/8, (127)/8, (210)/8
+  RGB_Color (134)/8, (244)/8, (98)/8
+  RGB_Color (130)/8, (128)/8, (255)/8
 
 ; Write the colors and cycle to the next set
 .color_cycle:
