@@ -94,7 +94,7 @@ PressStart:
 
 ShowMainMenu:
   ; Clear the nametable
-  call ClearNametable
+  call ClearAndAddFHBGText
   ld hl, SCREEN1
   ld b, 9
 .clear_loop:
@@ -219,7 +219,19 @@ ShowMainMenu:
 
   call ScreenOff
 
-  jp MainInit
+  call ClearOAM
+  ld a, sprites>>8
+  call run_dma
+
+  ; Make a decision and jump
+  ldh a, [MenuCursor]
+  or a
+  jp z, MainInit
+  dec a
+  jp z, ShowHelp
+  dec a
+  jp z, MainInit
+  jp ShowCredits
 
 ; Paint side borders with tiles D and D+1
 .side_border:
@@ -293,3 +305,130 @@ CreditsText:
   db "Credits",0
 ExtrasText:
   db "Extras",0
+
+; ---------------------------------------------------
+
+ShowCredits:
+  call ClearAndAddFHBGText
+
+  ld hl, CreditsText1
+  ld de, SCREEN1+2+5*32
+  call strcpy
+  ld hl, CreditsText2
+  ld de, SCREEN1+2+6*32
+  call strcpy
+  ld hl, CreditsText3
+  ld de, SCREEN1+2+7*32
+  call strcpy
+  ld hl, CreditsText4
+  ld de, SCREEN1+2+9*32
+  call strcpy
+  ld hl, CreditsText5
+  ld de, SCREEN1+2+10*32
+  call strcpy
+  ld hl, CreditsText6
+  ld de, SCREEN1+2+11*32
+  call strcpy
+
+
+.wait_for_a:
+  ld hl, PressAToContinue
+  ld de, SCREEN1+5+16*32
+  call strcpy
+
+  call ScreenOn
+
+  call wait_vblank
+  call readkeys
+  ldh a, [KeyNew]
+  and KEY_A|KEY_B
+  jr z, .wait_for_a
+
+  call ScreenOff
+
+  jp ShowMainMenu
+
+CreditsText1:
+  db "Game",0
+CreditsText2:
+  db "by NovaSquirrel",0
+CreditsText3:
+  db "novasquirrel.com",0
+
+CreditsText4:
+  db "Enemy sprites",0
+CreditsText5:
+  db "by PinoBatch",0
+CreditsText6:
+  db "pineight.com",0
+
+PressAToContinue:
+  db "(Press A)",0
+
+; ---------------------------------------------------
+
+ShowHelp:
+  call ClearAndAddFHBGText
+
+  ld hl, HelpText1
+  ld de, SCREEN1+2+4*32
+  call strcpy
+  ld hl, HelpText2
+  ld de, SCREEN1+2+5*32
+  call strcpy
+  ld hl, HelpText3
+  ld de, SCREEN1+2+6*32
+  call strcpy
+  ld hl, HelpText4
+  ld de, SCREEN1+2+7*32
+  call strcpy
+  ld hl, HelpText5
+  ld de, SCREEN1+2+8*32
+  call strcpy
+  ld hl, HelpText6
+  ld de, SCREEN1+2+10*32
+  call strcpy
+  ld hl, HelpText7
+  ld de, SCREEN1+2+11*32
+  call strcpy
+  ld hl, HelpText8
+  ld de, SCREEN1+2+13*32
+  call strcpy
+  ld hl, HelpText9
+  ld de, SCREEN1+2+14*32
+  call strcpy
+
+  jp ShowCredits.wait_for_a
+
+HelpText1:
+  db "Throw blocks at",0
+HelpText2:
+  db "your enemies to",0
+HelpText3:
+  db "stun them, then",0
+HelpText4:
+  db "touch them to",0
+HelpText5:
+  db "finish the job.",0
+
+HelpText6:
+  db "Complete each",0
+HelpText7:
+  db "level's goal.",0
+
+HelpText8:
+  db "+:Move A:Jump",0
+HelpText9:
+  db "B:Toss block",0
+
+; ---------------------------------------------------
+
+ClearAndAddFHBGText:
+  call ClearNametable
+  ld hl, FHBGText
+  ld de, SCREEN1+8+1*32
+  call strcpy
+  ret
+
+FHBGText:
+  db "FHBG",0

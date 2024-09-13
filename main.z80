@@ -34,6 +34,8 @@ MainInit:
   xor a
   ldh [LevelComplete], a
   ldh [LevelCompleteTimer], a
+  ldh [PlayerVYL], a
+  ldh [PlayerVYH], a
   ld [RainbowRGBTIndex], a
 
   ; Write the paused text
