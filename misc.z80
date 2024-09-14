@@ -207,6 +207,17 @@ ClearNametable:
   ld e, " "
   jp memset
 
+ClearAttributes:
+  ldh a, [IsGameBoyColor]
+  cp $11
+  ret nz
+  vram_bank_1
+  ld hl, SCREEN1
+  ld bc, 1024*2
+  call memclear
+  vram_bank_0
+  ret
+
 GetRandomNumber:
   ; Adapted from the random number generator used in Nova the Squirrel
   ; http://codebase64.org/doku.php?id=base:two_very_fast_16bit_pseudo_random_generators_as_lfsr
@@ -476,3 +487,8 @@ RainbowLUT:
   RGB_Color 31, 0, 17
   RGB_Color 31, 0, 12
   RGB_Color 31, 0, 6
+
+ClearAndWriteOAM:
+  call ClearOAM
+  ld a, sprites>>8
+  jp run_dma

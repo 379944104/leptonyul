@@ -61,16 +61,13 @@ MainInit:
   ldh [$ff4f], a
 .NotColor:
 
-
   ldh a, [LevelNumber]
   call LoadLevel
   call RenderLevel
   call UploadLevelPalette
 
   ; Erase all initial sprites
-  call ClearOAM
-  ld a, sprites>>8
-  call run_dma
+  call ClearAndWriteOAM
   call InitCamera
 
   call ScreenOn
@@ -208,6 +205,10 @@ MainLoop:
   and KEY_SELECT
   jr z, NextLevel.not_skip
 NextLevel:
+  ldh a, [IsEditMode]
+  or a
+  jp nz, ShowEditorFromLevel
+
   ldh a, [LevelNumber]
   inc a
   ldh [LevelNumber], a

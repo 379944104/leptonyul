@@ -1,0 +1,290 @@
+; FHBG GB
+; Copyright (C) 2018 NovaSquirrel
+;
+; This program is free software: you can redistribute it and/or
+; modify it under the terms of the GNU General Public License as
+; published by the Free Software Foundation; either version 3 of the
+; License, or (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful, but
+; WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+; General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;
+
+SECTION "editor", ROM0
+
+ShowEditorFromLevel:
+  call wait_vblank
+  call ScreenOff
+  call UploadTitlePalette
+  call ClearAndWriteOAM
+  xor a
+  ldh [rSCX], a
+  ldh [rSCY], a
+ShowEditor:
+  call ClearNametable
+  call ClearAttributes
+
+  ldh a, [IsEditMode]
+  or a
+  jr nz, .SkipClearMap
+  ld hl, edit_map
+  ld bc, 256
+  call memclear
+  xor a
+  ldh [CursorX], a
+  ldh [CursorY], a
+  ld a, 1
+  ldh [CursorBrush], a
+.SkipClearMap:
+
+  call DrawLevelPreview
+
+  ; Draw list of blocks on the side
+  ld hl, SCREEN1+32
+  ld de, 32
+  ld a, $11
+.draw_side_loop:
+  ld [hl], a 
+  add hl, de
+  inc a
+  cp $10|LVL_WATER+1
+  jr nz, .draw_side_loop
+
+
+EditorLoop:
+  ; Draw the cursor sprite
+  ldh a, [CursorY]
+  add a ; * 8
+  add a
+  add a
+  add (1*8)+16
+  ld [$fe00], a ; Y position
+
+  ldh a, [CursorX]
+  add a ; * 8
+  add a
+  add a
+  add (2*8)+8
+  ld [$fe01], a ; X position
+
+  ld a, $20
+  ld [$fe02], a ; star
+; -----
+  ldh a, [CursorBrush]
+  add a
+  add a
+  add a
+  add 16
+  ld [$fe00+4], a ;Y position
+  ld a, 8+8
+  ld [$fe01+4], a ; X position
+  ld a, $21
+  ld [$fe02+4], a ; tile
+  ld a, OAM_XFLIP
+  ld [$fe03+4], a ; attribute
+
+; ---------------------------------
+  call ScreenOn
+  call wait_vblank
+  call readkeys
+  call DoKeyRepeat
+  ; Make it easier to draw lines
+  ld a, [KeyNew]
+  and KEY_LEFT | KEY_DOWN | KEY_UP | KEY_RIGHT
+  jr z, .notline
+  ld a, [KeyDown]
+  and KEY_A
+  jr z, .notline
+  ; Retrigger the toggle button
+  ld a, [KeyNew]
+  or KEY_A
+  ld [KeyNew], a
+.notline:
+
+  ; React to key inputs
+  ldh a, [KeyNew]
+  ld b, a
+
+  ldh a, [KeyDown]
+  and KEY_B
+  jr z, .NotB
+
+  bit 7, b
+  jr z, .NotBDown
+  ldh a, [CursorBrush]
+  inc a
+  cp LVL_WATER+1
+  jr c, .NoBDownCorrect
+  ld a, 1
+.NoBDownCorrect:
+  ldh [CursorBrush], a
+.NotBDown:
+
+  bit 6, b
+  jr z, .NotBUp
+  ldh a, [CursorBrush]
+  dec a
+  jr nz, .NoBUpCorrect
+  ld a, LVL_WATER
+.NoBUpCorrect:
+  ldh [CursorBrush], a
+.NotBUp:
+
+  jr .SkipButtons
+.NotB:
+
+  bit 7, b
+  jr z, .NotDown
+  ldh a, [CursorY]
+  inc a
+  and 15
+  ldh [CursorY], a
+.NotDown:
+
+  bit 6, b
+  jr z, .NotUp
+  ldh a, [CursorY]
+  dec a
+  and 15
+  ldh [CursorY], a
+.NotUp:
+
+  bit 5, b
+  jr z, .NotLeft
+  ldh a, [CursorX]
+  dec a
+  and 15
+  ldh [CursorX], a
+.NotLeft:
+
+  bit 4, b
+  jr z, .NotRight
+  ldh a, [CursorX]
+  inc a
+  and 15
+  ldh [CursorX], a
+.NotRight:
+
+  bit 0, b
+  jr z, .NotA
+  ; Calculate level position
+  ldh a, [CursorY]
+  add a
+  add a
+  add a
+  add a
+  ld c, a
+  ldh a, [CursorX]
+  or c
+  ld c, a
+  ld b, edit_map>>8
+
+  ; Replace?
+  ld a, [bc]
+  or a
+  jr z, .FillTile
+
+.EraseTile:
+  xor a
+  ld [bc], a
+  jr .RedrawTile
+.FillTile:
+  ldh a, [CursorBrush]
+  ld [bc], a
+
+.RedrawTile:
+  ; Calculate screen position
+  ldh a, [CursorY]
+  inc a
+  ld l, a
+  ld h, 0
+  add hl, hl
+  add hl, hl
+  add hl, hl
+  add hl, hl
+  add hl, hl
+  ldh a, [CursorX]
+  add 2
+  add_hl_a
+
+  ld de, SCREEN1
+  add hl, de
+  call wait_vblank
+  ld a, [bc]
+  add $10
+  ld [hl], a
+.NotA:
+
+.SkipButtons:
+
+  ldh a, [KeyNew]
+  and KEY_START
+  jp z, EditorLoop
+
+  call ScreenOff
+
+; Test the level
+  ld a, 1
+  ldh [IsEditMode], a
+
+  ld a, low(SampleEnemyList)
+  ldh [EnemyList+0], a
+  ldh [EnemyListStart+0], a
+  ld a, high(SampleEnemyList)
+  ldh [EnemyList+1], a
+  ldh [EnemyListStart+1], a
+  ldh a, [CursorX]
+  ldh [PlayerPXH], a
+  ldh a, [CursorY]
+  ldh [PlayerPYH], a
+  xor a
+  ldh [PlayerPXL], a
+  ldh [PlayerPYL], a
+
+  ; Convert the level from editor IDs to metatile IDs
+  ld hl, edit_map
+  ld de, level_map
+ConvertLevelLoop:
+  ; Get the converted level block
+  ld a, [hl+]
+  push hl
+  ld hl, SingleBlockList
+  add_hl_a
+  ld a, [hl]
+  pop hl
+
+  ld [de], a
+  inc e
+  jr nz, ConvertLevelLoop
+
+
+
+  jp MainInit
+;  jp ShowMainMenu
+
+DrawLevelPreview:
+  ld hl, SCREEN1+2+32
+  ld de, edit_map
+.loop:
+  ; Write one tile
+  ld a, [de]
+  inc de
+  or 16
+  ld [hl+], a
+
+  ; Stop if at end of level
+  ld a, e
+  or a
+  ret z
+  ; New row?
+  and $0f
+  jr nz, .loop
+  ; New row, adjust pointer
+  ld bc, 16
+  add hl, bc
+  jr .loop

@@ -2,6 +2,7 @@ SECTION "vars", WRAM0[$C000]
 sprites:   ds 256 ; Sprite page
 level_map: ds 256 ; Level blocks
 actors:    ds 256 ; Actor information
+edit_map:  ds 256 ; Level editor map
 OfferJumpTimer:  db
 PlayerScrollPYL: db
 PlayerScrollPYH: db
@@ -44,8 +45,10 @@ LevelHeight:       db ; level height in blocks
 
 CursorX:        db ; X position of cursor, in cells
 CursorY:        db ; Y position of cursor, in cells
+CursorBrush:    db ; Currently selected block type
 MenuCursor:     db ; Y position of menu cursor
 MenuCount:      db ; number of menu options
+IsEditMode:     db ; nonzero if edit mode is on
 
 KeyDown:        db ; Keys pressed this frame
 KeyLast:        db ; Keys pressed last frame

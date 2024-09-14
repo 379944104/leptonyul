@@ -29,6 +29,7 @@ INCLUDE "levels.z80"
 INCLUDE "actor.z80"
 INCLUDE "unpb16.z80"
 INCLUDE "screens.z80"
+INCLUDE "editor.z80"
 
 SECTION "init", ROM0[$0150]
 Init:

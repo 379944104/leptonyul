@@ -31,7 +31,7 @@ SECTION "levels", ROM0
 ; 08 yx    - grass
 ; 09 yx    - flower
 ; 0a yx    - spring
-; 0b yx    - lock
+; 0b yx    - water
 ; 0c       -
 ; 0d       -
 ; 0e       -
@@ -143,6 +143,15 @@ LoadLevel:
   ld hl, LevelHeaders
   add_hl_a
 
+  ; Clear enemy list
+  ld hl, actors
+  ld c, 0
+  call memclear8
+
+  ldh a, [IsEditMode]
+  or a
+  jr nz, .NoLoad
+
   ; Get level map pointer
   ld a, [hl+]
   ld e, a
@@ -150,10 +159,6 @@ LoadLevel:
   ld d, a
   push hl
   call DecompressMap
-  ; Clear enemy list
-  ld hl, actors
-  ld c, 0
-  call memclear8
   pop hl
 
   ; Get enemy pointer
@@ -179,6 +184,7 @@ LoadLevel:
   ld [actors+16], a
 .NotChipLevel:
 
+.NoLoad:
   ; Detect level height
   ld hl, level_map+255
 .LevelHeightLoop:

@@ -108,9 +108,7 @@ ShowMainMenu:
   xor a
   ldh [MenuCursor], a
 
-  call ClearOAM
-  ld a, sprites>>8
-  call run_dma
+  call ClearAndWriteOAM
 
   call UploadTitlePalette
 
@@ -219,9 +217,7 @@ ShowMainMenu:
 
   call ScreenOff
 
-  call ClearOAM
-  ld a, sprites>>8
-  call run_dma
+  call ClearAndWriteOAM
 
   ; Make a decision and jump
   ldh a, [MenuCursor]
@@ -230,7 +226,7 @@ ShowMainMenu:
   dec a
   jp z, ShowHelp
   dec a
-  jp z, MainInit
+  jp z, ShowEditor
   jp ShowCredits
 
 ; Paint side borders with tiles D and D+1
