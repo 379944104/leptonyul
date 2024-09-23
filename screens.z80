@@ -93,6 +93,9 @@ PressStart:
 ; ---------------------------------------------------
 
 ShowMainMenu:
+  xor a
+  ldh [IsEditMode], a
+
   ; Clear the nametable
   call ClearAndAddFHBGText
   ld hl, SCREEN1

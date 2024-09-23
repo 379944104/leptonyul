@@ -144,9 +144,11 @@ LoadLevel:
   add_hl_a
 
   ; Clear enemy list
+  push hl
   ld hl, actors
   ld c, 0
   call memclear8
+  pop hl
 
   ldh a, [IsEditMode]
   or a
