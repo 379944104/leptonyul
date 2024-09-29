@@ -218,9 +218,30 @@ ActorFireball:
   ret
 
 ActorFlames:
-  ld a, $1c
+  call EnemyFall
+  jr c, .nowalk    ; walk -only- if in the air
+  ld hl, actor_var1
+  add hl, de
+  ld a, [hl]
+  call EnemyWalk
+  call EnemyAutoBump
+.nowalk:
+
+  ; Flip
+  ldh a, [retraces]
+  and 8
+  call z, EnemyTurnAround
+
   ld b, 0
-  jp DrawActor
+  ld a, $1c
+  call DrawActor
+
+  ; Unflip
+  ldh a, [retraces]
+  and 8
+  call z, EnemyTurnAround
+
+  jp EnemyDespawnTimer
 
 ActorBottle:
   ret
@@ -341,6 +362,26 @@ ActorSpinner:
   db $74, $78, $7c, $78
 
 ActorOwl:
+  ; Is it already in the air?
+  call EnemyStandingOnSolid
+  push af
+
+  ; Don't walk while falling
+  call EnemyFall
+  jr nc, .nowalk
+
+  ld a, $18
+  call EnemyWalk
+  call EnemyAutoBump
+
+  ; Turn to face the player if the enemy landed, but was falling last frame
+  pop af
+  call nc, EnemyLookAtPlayer
+  jr .skip
+.nowalk:
+  pop af
+.skip:
+
   ldh a, [retraces]
   and 4
   add $58
@@ -364,6 +405,49 @@ ActorBurger:
   jp EnemyCommon
 
 ActorFireWalk:
+  call EnemyFall
+  jr nc, .nowalk
+  ld a, $10
+  call EnemyWalk
+  call EnemyAutoBump
+.nowalk:
+
+  ; Throw flames sometimes
+  ldh a, [retraces]
+  and 15
+  jr nz, .no_flames
+  ; No flames if stunned
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  jr nz, .no_flames
+  ; Find a slot
+  call EnemyFindFree
+  jr nc, .no_flames
+
+  call GetRandomNumber
+  and 128
+  or ACTOR_FLAMES
+  ld [hl+], a
+
+  ; Y velocity
+  ld [hl], low($-20)
+  inc l
+  ld [hl], high($-20)
+  inc l
+  ; X and Y position
+  call EnemyCopyPosition
+  inc l
+  ld [hl], 32 ; timer
+  inc l
+  ; Random speed
+  call GetRandomNumber
+  and $1f
+  add 5
+  ld [hl], a ; X speed
+.no_flames:
+
   ldh a, [retraces]
   and 4
   add $28
@@ -372,18 +456,142 @@ ActorFireWalk:
   jp EnemyCommon
 
 ActorFireJump:
-  jp EnemyCommon
+  call EnemyFall
+  jr nc, .no_bounce
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  jr nz, .no_bounce
 
-ActorBallGuy:
-  ld a, $60
+  ld hl, actor_vyl
+  add hl, de
+  ld [hl], low(-$40)
+  inc l
+  ld [hl], high(-$40)
+
+
+  call EnemyFindFree
+  jr nc, .no_bounce
+
+  call GetRandomNumber
+  and 128
+  or ACTOR_FLAMES
+  ld [hl+], a
+
+  ; skip Y velocity
+  inc l
+  inc l
+  ; X and Y position
+  call EnemyCopyPosition
+  inc l
+  ld [hl], 20 ; timer
+.no_bounce:
+
+  ld a, $10
+  call EnemyWalk
+  call EnemyAutoBump
+
+  ; Draw the enemy
+  call .FlipSometimes
+  ldh a, [retraces]
+  rrca
+  and %1100
+  add $30
   ld b, 0
   call DrawActor
+  call .FlipSometimes
+
+  jp EnemyCommon
+
+.FlipSometimes:
+  ldh a, [retraces]
+  and %100000
+  ret z
+
+  ; Flip horizontally and vertically
+  call EnemyTurnAround
+
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  xor 1
+  ld [hl], a
+  ret
+
+ActorBallGuy:
+  call EnemyFall
+  jr nc, .no_bounce
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  jr nz, .no_bounce
+
+  ld hl, actor_vyl
+  add hl, de
+  ld [hl], low(-$30)
+  inc l
+  ld [hl], high(-$30)
+.no_bounce:
+
+  ld a, $18
+  call EnemyWalk
+  call EnemyAutoBump
+
+  ld a, $60
+  ld b, 0
+  call DrawActorWithoutFlip
   jp EnemyCommon
 
 ActorBallRoll:
+  ; Save old Y speed
+  ld hl, actor_vyl
+  add hl, de
+  ld a, [hl+]
+  ld c, a
+  ld a, [hl]
+  ld b, a
+
+  push bc
+  call EnemyFall
+  pop bc
+  jr nc, .no_bounce
+  ld a, b
+  or c
+  jr z, .no_bounce
+
+  ; Invert BC
+  xor a
+  sub c
+  ld c, a
+  ld a, 0
+  sbc b
+  ld b, a
+
+  ; Divide by 4
+  sra b
+  rr c
+  sra b
+  rr c
+
+  ; Write back modified Y speed
+  ld hl, actor_vyl
+  add hl, de
+  ld a, c
+  ld [hl+], a
+  ld a, b
+  ld [hl], a
+.no_bounce:
+  
+
+  ld a, $20
+  call EnemyWalk
+  call EnemyAutoBump
+
   ld a, $68
   ld b, 0
-  call DrawActor
+  call DrawActorWithoutFlip
   jp EnemyCommon
 
 ActorThwomp:
@@ -438,6 +646,31 @@ EnemyDontMoveIfStunned:
   or a
   ret z
   pop hl ; eat the return address
+  ret
+
+EnemyCopyPosition:
+  push de
+  ld a, e
+  add actor_pyl
+  ld e, a
+
+  ; PYL
+  ld a, [de]
+  inc e
+  ld [hl+], a
+  ; PYH
+  ld a, [de]
+  inc e
+  ld [hl+], a
+  ; PXL
+  ld a, [de]
+  inc e
+  ld [hl+], a
+  ; PXH
+  ld a, [de]
+  inc e
+  ld [hl+], a
+  pop de
   ret
 
 EnemyCommon:
@@ -686,6 +919,23 @@ EnemyPlayerTouch:
   adc (8+16-1) ;Carry set if overlap
   ret nc
   scf
+  ret
+
+EnemyLookAtPlayer:
+  ld hl, actor_pxh
+  add hl, de
+  ldh a, [PlayerPXH]
+  cp [hl]
+  jr nc, .right
+.left:
+  ld a, [de]
+  or 128
+  ld [de], a
+  ret
+.right:
+  ld a, [de]
+  and 127
+  ld [de], a
   ret
 
 EnemyTurnAround:
@@ -985,7 +1235,7 @@ EnemyDespawnTimer:
   dec a
   ld [hl], a
   ret nz
-; Clear timer
+; Clear enemy type
   xor a
   ld [de], a
   ret
