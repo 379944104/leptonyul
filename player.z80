@@ -305,16 +305,12 @@ DrawPlayer:
   ; Write a default tile list
   xor a
   ldh [temp+0], a
-  inc a
+  add 2
   ldh [temp+1], a
-  inc a
+  add 2
   ldh [temp+2], a
-  inc a
+  add 2
   ldh [temp+3], a
-  inc a
-  ldh [temp+4], a
-  inc a
-  ldh [temp+5], a
 
   ; Animate walking
   ldh a, [KeyDown]
@@ -329,9 +325,9 @@ DrawPlayer:
   ld hl, WalkLegAnim
   add_hl_a
   ld a, [hl+]
-  ldh [temp+4], a
+  ldh [temp+2], a
   ld a, [hl]
-  ldh [temp+5], a
+  ldh [temp+3], a
   pop hl
 .NoWalking:
 
@@ -344,7 +340,6 @@ DrawPlayer:
   ld a, 0
   hswap [temp+0], [temp+1]
   hswap [temp+2], [temp+3]
-  hswap [temp+4], [temp+5]
 .NoFlip:
 
 ; --------------------------------
@@ -368,7 +363,7 @@ DrawPlayer:
   ld [hl+],a ; set attribute
 
   ld a, e
-  add 8
+  add 16
   ld e, a
 
 ; --------------------------------
@@ -391,30 +386,6 @@ DrawPlayer:
   ld a, b
   ld [hl+],a ; set attribute
 
-  ld a, e
-  add 8
-  ld e, a
-
-; --------------------------------
-
-  ld a, e
-  ld [hl+], a ; Y position
-  ld a, d
-  ld [hl+], a ; X position
-  ldh a, [temp+4]
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
-
-  ld a, e
-  ld [hl+], a ; Y position
-  ld a, d
-  add a, 8
-  ld [hl+], a ; X position
-  ldh a, [temp+5]
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
 
 ; --------------------------------
   ld a, l
@@ -434,7 +405,7 @@ DrawPlayer:
   ld [hl+], a ; Y position
   ld a, d
   ld [hl+], a ; X position
-  ld a, $08
+  ld a, $18
   ld [hl+],a ; set tile number
   ld a, b
   ld [hl+],a ; set attribute
@@ -444,28 +415,7 @@ DrawPlayer:
   ld a, d
   add a, 8
   ld [hl+], a ; X position
-  ld a, $09
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
-
-  ld a, e
-  add 8
-  ld [hl+], a ; Y position
-  ld a, d
-  ld [hl+], a ; X position
-  ld a, $0a
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
-
-  ld a, e
-  add 8
-  ld [hl+], a ; Y position
-  ld a, d
-  add a, 8
-  ld [hl+], a ; X position
-  ld a, $0b
+  ld a, $1a
   ld [hl+],a ; set tile number
   ld a, b
   ld [hl+],a ; set attribute
@@ -475,10 +425,10 @@ DrawPlayer:
   ret
 
 WalkLegAnim:
-  db 4, 5
-  db 6, 5
-  db 4, 5
-  db 4, 7
+  db 4, 6
+  db 8, 6
+  db 4, 6
+  db 4, 10
 
 ; --------------------------------
 PlayerLevelCollision:

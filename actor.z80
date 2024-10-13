@@ -116,7 +116,7 @@ ActorBlock:
   ld a, [hl]
   ld b, a
 
-  ld a, $08
+  ld a, $18
   jp DrawActorWithoutFlip
 
 ActorNumberLeft:
@@ -133,6 +133,7 @@ ActorNumberLeft:
   ld a, c
   ld [hl+], a
   ldh a, [ChipsNeeded]
+  add a ; *2
   or $80
   ld [hl+], a
   xor a
@@ -737,7 +738,7 @@ EnemyCommon:
   ld [hl+], a
   ld a, c     ; X
   ld [hl+], a
-  ld a, $21   ; tile
+  ld a, $22   ; tile
   ld [hl+], a
 
   ld a, [de]  ; Attribute, use direction to calculate it
@@ -1309,24 +1310,19 @@ DrawActorFlipped:
 DrawActor:
   ; Write the four tiles starting from this base tile
   ldh [temp+0], a
-  inc a
+  add 2
   ldh [temp+1], a
-  inc a
-  ldh [temp+2], a
-  inc a
-  ldh [temp+3], a
 
   ld a, b
-  ldh [temp+5], a ; attributes
+  ldh [temp+2], a ; attributes
 
   ld a, [de]
   rla
   jr nc, .no_horiz_flip
   hswap [temp+0], [temp+1]
-  hswap [temp+2], [temp+3]
   ld a, b
   or OAM_XFLIP
-  ldh [temp+5], a
+  ldh [temp+2], a
 .no_horiz_flip:
 
   ld hl, actor_state
@@ -1334,11 +1330,9 @@ DrawActor:
   ld a, [hl]
   cp astate_stunned
   jr nz, .no_vert_flip
-  hswap [temp+0], [temp+2]
-  hswap [temp+1], [temp+3]
-  ldh a, [temp+5]
+  ldh a, [temp+2]
   or OAM_YFLIP
-  ldh [temp+5], a
+  ldh [temp+2], a
 .no_vert_flip:
 
 ; --------------------------------
@@ -1399,7 +1393,7 @@ DrawActor:
   ret
 .nocancel:
 
-  ldh a, [temp+5]
+  ldh a, [temp+2]
   ld b, a ; B = attribute
 
   ld h, high(sprites)
@@ -1422,27 +1416,6 @@ DrawActor:
   add 8
   ld [hl+], a ; X position
   ldh a, [temp+1]
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
-
-  ld a, e
-  add 8
-  ld [hl+], a ; Y position
-  ld a, d
-  ld [hl+], a ; X position
-  ldh a, [temp+2]
-  ld [hl+],a ; set tile number
-  ld a, b
-  ld [hl+],a ; set attribute
-
-  ld a, e
-  add 8
-  ld [hl+], a ; Y position
-  ld a, d
-  add 8
-  ld [hl+], a ; X position
-  ldh a, [temp+3]
   ld [hl+],a ; set tile number
   ld a, b
   ld [hl+],a ; set attribute
