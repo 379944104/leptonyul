@@ -86,6 +86,23 @@ MainLoop:
   ; Clear sprites
   call ClearOAM
 
+  ; Move OAM pointer ahead to make room for health
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4
+  ldh [oam_ptr], a
+  ; Display health count
+  ld a, 16+2
+  ld [hl+], a
+  ld a, 8+2
+  ld [hl+], a
+  ld a, [PlayerHealth]
+  or $80
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+
   ; Run game loop stuff
   call readkeys
   call AdjustCamera
@@ -168,25 +185,6 @@ MainLoop:
   ld a, d
   ldh [EnemyList+1], a
 .no_spawn_enemy:
-
-  ; Move OAM pointer ahead to make room for health
-  ld h, sprites>>8
-  ldh a, [oam_ptr]
-  ld l, a
-  add 4
-  ldh [oam_ptr], a
-  ; Display health count
-  ld a, 16+2
-  ld [hl+], a
-  ld a, 8+2
-  ld [hl+], a
-  ld a, [PlayerHealth]
-  or $80
-  ld [hl+], a
-  xor a
-  ld [hl+], a
-
-
 
   ; If the level is complete, run up a timer
   ; and then exit it
