@@ -81,3 +81,6 @@
   enum_elem BLOCK_CHECKER_LRD
   enum_elem BLOCK_CHECKER_LRU
   enum_elem BLOCK_CHECKER_LRUD
+
+  enum_elem BLOCK_POLE
+

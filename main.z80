@@ -101,7 +101,7 @@ MainLoop:
   or $80
   ld [hl+], a
   xor a
-  ld [hl+], a
+  ld [hl], a
 
   ; Run game loop stuff
   call readkeys

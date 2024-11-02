@@ -24,4 +24,5 @@ map1:
   db LVL_H_GRASS|$1, $a2
   db LVL_H_PLAT|$1, $81
   db LVL_H_PLAT|$1, $41
+  db LVL_RECT|LVL_POLE,    $98, $40
   db LVL_DONE, $23

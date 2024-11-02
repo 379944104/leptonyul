@@ -32,7 +32,7 @@ SECTION "levels", ROM0
 ; 09 yx    - flower
 ; 0a yx    - spring
 ; 0b yx    - water
-; 0c       -
+; 0c yx    - pole
 ; 0d       -
 ; 0e       -
 ; 0f       -
@@ -68,6 +68,7 @@ LVL_GRASS     = $08
 LVL_FLOWER    = $09
 LVL_SPRING    = $0a
 LVL_WATER     = $0b
+LVL_POLE      = $0c
 
 LVL_RECT      = $10 ; OR with the above list
 
@@ -105,6 +106,7 @@ LevelHeaders:
 
 
 SampleEnemyList:
+  db ACTOR_FIRE_WALK, ACTOR_FIRE_WALK, ACTOR_FIRE_WALK, ACTOR_FIRE_WALK
   db ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP
   db ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL
   db ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL
@@ -128,6 +130,7 @@ SingleBlockList: ; for 0x and 1x
   db BLOCK_EMPTY,    BLOCK_CHECKER,       BLOCK_SOLID,  BLOCK_DIRT
   db BLOCK_PLATFORM, BLOCK_FALL_PLATFORM, BLOCK_LADDER, BLOCK_FENCE
   db BLOCK_GRASS,    BLOCK_FLOWER1,       BLOCK_SPRING, BLOCK_WATER
+  db BLOCK_POLE
 
 MultiBlockList: ; for all other commands
 ; vert

@@ -97,6 +97,8 @@ MetatileFlags:
   db META_SOLID_ALL
   db META_SOLID_ALL
   db META_SOLID_ALL
+  ; pole
+  db META_COLOR3
 
 Metatiles:
   ; empty
@@ -171,6 +173,8 @@ Metatiles:
   db $e5, $e5, $f5, $f5 ; lru.
   db $e5, $e5, $e5, $e5 ; lrud
 
+  ; pole
+  db $fc, $fd, $fc, $fd
 
 IsNotBlock:
   ; shift in a 0
