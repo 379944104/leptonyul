@@ -19,4 +19,6 @@ map3:
   db LVL_H_FENCE|$2, $44
   db LVL_H_DIRT|$2, $84
   db LVL_SPRING,  $9a
+  db LVL_RECT|LVL_POLE,    $96, $30
+  db LVL_POLE,    $c9
   db LVL_DONE, $b6

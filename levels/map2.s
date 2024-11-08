@@ -12,4 +12,6 @@ map2:
   db LVL_H_SOLID|$3, $36
   db LVL_H_GRASS|$2, $85
   db LVL_H_FLOWER|$2, $88
+  db LVL_RECT|LVL_POLE,    $46, $40
+  db LVL_RECT|LVL_POLE,    $49, $40
   db LVL_DONE, $78
