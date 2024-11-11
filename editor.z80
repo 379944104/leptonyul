@@ -29,9 +29,17 @@ ShowEditor:
   call ClearNametable
   call ClearAttributes
 
+  ; Initialize the level if we're entering here from the menu
   ldh a, [IsEditMode]
   or a
   jr nz, .SkipClearMap
+
+  ; Init the level parameters
+  xor a
+  ldh [IsChipLevel], a
+  ld a, 4
+  ld [EnemyLimit], a
+
   ld hl, edit_map
   ld bc, 256
   call memclear
@@ -41,6 +49,8 @@ ShowEditor:
   ld a, 1
   ldh [CursorBrush], a
 .SkipClearMap:
+  ld a, 1
+  ldh [IsEditMode], a
 
   call DrawLevelPreview
 
@@ -52,7 +62,7 @@ ShowEditor:
   ld [hl], a 
   add hl, de
   inc a
-  cp $10|LVL_WATER+1
+  cp $10|LVL_POLE+1
   jr nz, .draw_side_loop
 
 
@@ -118,7 +128,7 @@ EditorLoop:
   jr z, .NotBDown
   ldh a, [CursorBrush]
   inc a
-  cp LVL_WATER+1
+  cp LVL_POLE+1
   jr c, .NoBDownCorrect
   ld a, 1
 .NoBDownCorrect:
@@ -130,7 +140,7 @@ EditorLoop:
   ldh a, [CursorBrush]
   dec a
   jr nz, .NoBUpCorrect
-  ld a, LVL_WATER
+  ld a, LVL_POLE
 .NoBUpCorrect:
   ldh [CursorBrush], a
 .NotBUp:
@@ -226,12 +236,164 @@ EditorLoop:
   and KEY_START
   jp z, EditorLoop
 
+  ; falls into ShowEditorMenu
+ShowEditorMenu:
+  call wait_vblank
   call ScreenOff
+  call UploadTitlePalette
+  call ClearAndWriteOAM
 
+  call ClearAndAddFHBGText
+  call ClearAttributes
+
+  xor a ; first option
+  ldh [temp], a
+
+  ld hl, EditTestText
+  ld de, SCREEN1+3+5*32
+  call strcpy
+  ld hl, EditEnemiesText
+  ld de, SCREEN1+3+7*32
+  call strcpy
+  ld hl, EditNeededChips
+  ld de, SCREEN1+3+9*32
+  call strcpy
+  ld hl, EditEnemyLimit
+  ld de, SCREEN1+3+11*32
+  call strcpy
+  ld hl, BackToMainText
+  ld de, SCREEN1+3+13*32
+  call strcpy
+
+EditorMenuLoop:
+  ; Draw the cursor sprite
+  ldh a, [temp]
+  add a ; * 16
+  add a
+  add a
+  add a
+  add (5*8)+16
+  ld [$fe00], a ; Y position
+
+  ld a, 8*2+8
+  ld [$fe01], a ; X position
+
+  ld a, $20
+  ld [$fe02], a ; star
+
+  ld hl, $9930
+  ldh a, [IsChipLevel]
+  call PrintNybble
+
+  ld hl, $9970
+  ld a, [EnemyLimit]
+  call PrintNybble
+
+  call ScreenOn
+  call wait_vblank
+  call readkeys
+
+  ; React to key inputs
+  ldh a, [KeyNew]
+  ld b, a
+
+  bit 7, b
+  jr z, .NotDown
+  ldh a, [temp]
+  inc a
+  ldh [temp], a
+  cp 5
+  jr nz, .NotDown
+  xor a
+  ldh [temp], a
+.NotDown:
+
+  bit 6, b
+  jr z, .NotUp
+  ldh a, [temp]
+  dec a
+  ldh [temp], a
+  rla
+  jr nc, .NotUp
+  ld a, 4
+  ldh [temp], a
+.NotUp:
+
+  bit 5, b
+  jr z, .NotLeft
+  ; Select a parameter to decrease
+  ldh a, [temp]
+  sub 2
+  jr z, .NeededChipLeft
+  dec a
+  jr nz, .NotLeft
+.EnemyLimitLeft:
+  ld a, [EnemyLimit]
+  dec a
+  and 15
+  ld [EnemyLimit], a
+  jr .NotLeft
+.NeededChipLeft:
+  ldh a, [IsChipLevel]
+  dec a
+  and 15
+  ldh [IsChipLevel], a
+.NotLeft:
+
+  bit 4, b
+  jr z, .NotRight
+  ; Select a parameter to increase
+  ldh a, [temp]
+  sub 2
+  jr z, .NeededChipRight
+  dec a
+  jr nz, .NotRight
+.EnemyLimitRight:
+  ld a, [EnemyLimit]
+  inc a
+  and 15
+  ld [EnemyLimit], a
+  jr .NotRight
+.NeededChipRight:
+  ldh a, [IsChipLevel]
+  inc a
+  and 15
+  ldh [IsChipLevel], a
+.NotRight:
+
+  bit 0, b
+  jr z, .NotA
+  ldh a, [temp]
+  or a
+  jp z, EditorTestLevel
+  dec a
+  jp z, ShowEditorFromLevel ; do enemy list
+  sub 3 ; skip the two options that aren't choosable
+  jp z, ShowMainMenuFromEditor
+.NotA:
+
+  bit 1, b ; B, cancel the menu
+  jp nz, ShowEditorFromLevel
+
+  jp EditorMenuLoop
+
+EditTestText:
+  db "Test level",0
+EditEnemiesText:
+  db "Enemy list",0
+EditNeededChips:
+  db "Needed chips:",0
+EditEnemyLimit:
+  db "Enemy limit:",0
+BackToMainText:
+  db "Exit editor",0
+
+
+
+EditorTestLevel:
+  call wait_vblank
+  call ScreenOff
 ; Test the level
-  ld a, 1
-  ldh [IsEditMode], a
-
   ld a, low(SampleEnemyList)
   ldh [EnemyList+0], a
   ldh [EnemyListStart+0], a
@@ -261,11 +423,7 @@ ConvertLevelLoop:
   ld [de], a
   inc e
   jr nz, ConvertLevelLoop
-
-
-
   jp MainInit
-;  jp ShowMainMenu
 
 DrawLevelPreview:
   ld hl, SCREEN1+2+32
@@ -288,3 +446,19 @@ DrawLevelPreview:
   ld bc, 16
   add hl, bc
   jr .loop
+
+PrintNybble:
+  cp 10
+  jr c, .not_ten
+  ld [hl], "1"
+  inc l
+  sub 10
+  jr .was_ten
+.not_ten
+  ld [hl], "0"
+  inc l
+.was_ten:
+
+  add "0"
+  ld [hl], a
+  ret

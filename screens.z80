@@ -92,7 +92,11 @@ PressStart:
 
 ; ---------------------------------------------------
 
+ShowMainMenuFromEditor:
+  call wait_vblank
+  call ScreenOff
 ShowMainMenu:
+  ; Reset edit mode, for if we go here from the editor
   xor a
   ldh [IsEditMode], a
 
@@ -426,8 +430,7 @@ ClearAndAddFHBGText:
   call ClearNametable
   ld hl, FHBGText
   ld de, SCREEN1+8+1*32
-  call strcpy
-  ret
+  jp strcpy
 
 FHBGText:
   db "FHBG",0

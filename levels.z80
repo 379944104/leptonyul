@@ -184,15 +184,20 @@ LoadLevel:
   ld a, [hl]
   swap a
   and 15
-  ldh [ChipsNeeded], a
   ldh [IsChipLevel], a
+.NoLoad:
+
+  ; Init chip counter
+  ; (runs for both built-in levels and editor levels)
+  ldh a, [IsChipLevel]
+  ldh [ChipsNeeded], a
+  or a
   jr z, .NotChipLevel
   ld a, ACTOR_CHIP|128
   ld [actors+0], a
   ld [actors+16], a
 .NotChipLevel:
 
-.NoLoad:
   ; Detect level height
   ld hl, level_map+255
 .LevelHeightLoop:

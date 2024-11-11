@@ -29,7 +29,6 @@ MainInit:
 
   ld a, 4
   ld [PlayerHealth], a
-  ld [EnemyLimit], a
 
   xor a
   ldh [LevelComplete], a
@@ -225,7 +224,7 @@ Paused:
   ldh [rWX], a
   ld a, 144-8
   ldh [rWY], a
-  ld a, LCDCF_ON|LCDCF_OBJ8|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800|LCDCF_WINON|LCDCF_WIN9C00
+  ld a, LCDCF_ON|LCDCF_OBJ16|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800|LCDCF_WINON|LCDCF_WIN9C00
   ldh [rLCDC],a
 
 .loop:
@@ -235,7 +234,7 @@ Paused:
   and KEY_START
   jr z, .loop
 
-  ld a, LCDCF_ON|LCDCF_OBJ8|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800
+  ld a, LCDCF_ON|LCDCF_OBJ16|LCDCF_OBJON|LCDCF_BGON|LCDCF_BG8800
   ldh [rLCDC],a
   jp MainLoop
 
