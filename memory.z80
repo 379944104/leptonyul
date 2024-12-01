@@ -3,6 +3,9 @@ sprites:   ds 256 ; Sprite page
 level_map: ds 256 ; Level blocks
 actors:    ds 256 ; Actor information
 edit_map:  ds 256 ; Level editor map
+edit_enemy_list: ds 32 ; keep aligned
+edit_enemy_dummy: ; zero, to allow for a list that's 32 bytes long
+
 OfferJumpTimer:  db
 PlayerScrollPYL: db
 PlayerScrollPYH: db

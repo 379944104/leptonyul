@@ -33,8 +33,8 @@ RunPlayer:
   or a
   jr nz, .no_jump_cancel
   ldh a, [PlayerVYH]
-  and 128
-  jr z, .no_jump_cancel
+  rla
+  jr nc, .no_jump_cancel
 
   ; Smooth the jump cancel out
   ld a, low(-$20)
@@ -205,8 +205,8 @@ RunPlayer:
 
   ; Limit the speed
   ld a, b
-  and 128
-  jr nz, .GoingUp
+  rla
+  jr c, .GoingUp
   ld a, c
   cp $60
   blt .GoingUp
@@ -471,8 +471,8 @@ PlayerLevelCollision:
 .is_solid_bottom:
   push af
   ldh a, [PlayerVYH]
-  and 128
-  jr nz, .going_up
+  rla
+  jr c, .going_up
 
   ; If you're not climbing, and the ladder has a solid block
   ; to the left or right, then it's solid on the top.
@@ -495,8 +495,8 @@ PlayerLevelCollision:
 .is_climbing:
 
   ldh a, [PlayerPYL]
-  and 128
-  jp z, SolidAllInstead
+  rla
+  jp nc, SolidAllInstead
 
   pop af
   push hl
@@ -566,8 +566,8 @@ PlayerLevelCollision:
 ; Ceiling checks
 .reaction_ul_________:
   ldh a, [PlayerVYH]
-  and 128
-  ret z
+  rla
+  ret nc
 
   call .check_ll
   jr nc, .reaction_ul_________skip
@@ -580,8 +580,8 @@ PlayerLevelCollision:
   ret
 .reaction____ur______:
   ldh a, [PlayerVYH]
-  and 128
-  ret z
+  rla
+  ret nc
 
   call .check_lr
   jr nc, .reaction____ur______skip
@@ -635,8 +635,8 @@ PlayerLevelCollision:
   ld [PlayerScrollPYH], a
 
   ldh a, [PlayerPYL]
-  and 128
-  jr nz, .reaction_ground_skip
+  rla
+  jr c, .reaction_ground_skip
     ldh a, [PlayerPYH]
     dec a
     ldh [PlayerPYH], a
