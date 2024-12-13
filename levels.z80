@@ -193,6 +193,7 @@ LoadLevel:
   ldh [ChipsNeeded], a
   or a
   jr z, .NotChipLevel
+  ; Spawn in two chips
   ld a, ACTOR_CHIP|128
   ld [actors+0], a
   ld [actors+16], a

@@ -188,6 +188,27 @@ RunPlayer:
   ldh [PlayerPXL],a
 .NotRight:
 
+  ; Keep the player within the playfield horizontally
+  ldh a, [PlayerPXH]
+  or a
+  jr nz, .NoFixLeft
+  ldh a, [PlayerPXL]
+  cp $20
+  jr nc, .NoFixLeft
+  ld a, $20
+  ldh [PlayerPXL], a
+.NoFixLeft:
+
+  ldh a, [PlayerPXH]
+  cp 15
+  jr nz, .NoFixRight
+  ldh a, [PlayerPXL]
+  cp $e0
+  jr c, .NoFixRight
+  ld a, $e0
+  ldh [PlayerPXL], a
+.NoFixRight:
+
 
   ld a, [PlayerClimbing]
   or a
