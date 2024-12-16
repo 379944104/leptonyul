@@ -434,3 +434,86 @@ ClearAndAddFHBGText:
 
 FHBGText:
   db "FHBG",0
+
+; ---------------------------------------------------
+
+ShowDie:
+  call ClearOAM
+
+  ; Set up all the stars for the explosion
+  ld hl, sprites
+.init_loop:
+  ldh a, [CameraPY]
+  ld b, a
+  ldh a, [PlayerPY]
+  sub b
+  add 8
+  ld [hl+], a
+
+  ldh a, [CameraPX]
+  ld b, a
+  ldh a, [PlayerPX]
+  sub b
+  add 4
+  ld [hl+], a
+
+  ld a, $20
+  ld [hl+], a
+  xor a
+  ld [hl+], a
+  ld a, L
+  cp 4*16
+  jr nz, .init_loop
+
+  ld a, 30
+  ldh [temp], a
+
+  ; Main loop
+.wait:
+  call ScreenOn
+  call wait_vblank
+  ld a, sprites>>8
+  call run_dma
+
+  ; Update stars
+  ld hl, sprites
+  ld bc, .tiny_cosine
+  ld de, .tiny_sine
+.update_loop:
+  ld a, [de]
+  inc de
+  add [hl]
+  ld [hl+], a
+
+  ld a, [bc]
+  inc bc
+  add [hl]
+  ld [hl+], a
+  inc l
+  inc l
+
+  ld a, L
+  cp 4*16
+  jr nz, .update_loop
+
+
+  ldh a, [temp]
+  dec a
+  ldh [temp], a
+  jr nz, .wait
+
+  ldh a, [IsEditMode]
+  or a
+  jp nz, ShowEditorFromLevel
+
+  call wait_vblank
+  call ScreenOff
+  jp MainInit
+
+.tiny_sine:
+  db  0,  2,  3,  4
+.tiny_cosine:
+  db  4,  4,  3,  2
+  db  0, -2, -3, -4
+  db -4, -4, -3, -2
+  db  0,  2,  3,  4

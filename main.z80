@@ -100,6 +100,7 @@ MainLoop:
   ld a, 8+2
   ld [hl+], a
   ld a, [PlayerHealth]
+  add a ; multiply by 2
   or $80
   ld [hl+], a
   xor a
@@ -110,6 +111,10 @@ MainLoop:
   call AdjustCamera
   call RunPlayer
   call RunActors
+
+  ld a, [PlayerHealth]
+  or a
+  jp z, ShowDie
 
   ; Are there more enemies to spawn in?
   ldh a, [retraces]
