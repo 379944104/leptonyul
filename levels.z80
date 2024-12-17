@@ -211,6 +211,12 @@ LoadLevel:
   swap a
   and 15
   ldh [LevelHeight], a
+  ; snap up to 9 blocks tall if it's under that
+  cp 8
+  jr nc, .tall_enough
+  ld a, 8
+.tall_enough:
+
   sub 8 ;9-1
   ldh [CameraLimitBottom], a
   ret

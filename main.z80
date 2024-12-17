@@ -35,6 +35,7 @@ MainInit:
   ldh [LevelCompleteTimer], a
   ldh [PlayerVYL], a
   ldh [PlayerVYH], a
+  ld [PlayerInvincible], a
   ld [RainbowRGBTIndex], a
 
   ; Write the paused text
