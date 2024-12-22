@@ -219,7 +219,7 @@ NextLevel:
   inc a
   ldh [LevelNumber], a
   call ScreenOff
-  jp MainInit
+  jp ShowPreLevel
 .not_skip:
 
 

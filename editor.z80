@@ -657,7 +657,7 @@ EditorEnemyListRemove:
 EditorEnemyListExit:
   db "Start: Exit",0
 
-
+; Start a level test
 EditorTestLevel:
   call wait_vblank
   call ScreenOff
@@ -693,6 +693,7 @@ ConvertLevelLoop:
   jr nz, ConvertLevelLoop
   jp MainInit
 
+; Draws a level on the screen using the level editor tiles
 DrawLevelPreview:
   ld hl, SCREEN1+2+32
   ld de, edit_map
@@ -715,6 +716,7 @@ DrawLevelPreview:
   add hl, bc
   jr .loop
 
+; Prints a nybble at [hl] in decimal
 PrintNybble:
   cp 10
   jr c, .not_ten
@@ -731,6 +733,7 @@ PrintNybble:
   ld [hl], a
   ret
 
+; First tile for each of the usable enemy types
 EditorEnemyTiles:
   db $50 ; plodder
   db $40 ; sneaker

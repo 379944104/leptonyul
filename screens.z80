@@ -176,6 +176,7 @@ ShowMainMenu:
   ; Reset retraces
   xor a
   ldh [retraces], a
+  ldh [LevelNumber], a
 .loop:
   call wait_vblank
   ; Draw menu cursor
@@ -229,7 +230,7 @@ ShowMainMenu:
   ; Make a decision and jump
   ldh a, [MenuCursor]
   or a
-  jp z, MainInit
+  jp z, ShowPreLevel
   dec a
   jp z, ShowHelp
   dec a
@@ -517,3 +518,113 @@ ShowDie:
   db  0, -2, -3, -4
   db -4, -4, -3, -2
   db  0,  2,  3,  4
+
+; Shows the pre-level screen with the level preview
+ShowPreLevel:
+  ; screen is off already
+  call ClearNametable
+  call ClearAttributes
+  call UploadTitlePalette
+  call ClearAndWriteOAM
+  xor a
+  ldh [rSCX], a
+  ldh [rSCY], a
+
+  ldh a, [LevelNumber]
+  call LoadLevel
+
+  ; Convert the level format to what DrawLevelPreview takes
+  ld hl, level_map
+.convert_level_loop:
+
+  ld de, SingleBlockList
+  ld b, -1            ; counter
+.convert_level_find:
+  ld a, [de]          ; get a block from the list DrawLevelPreview uses
+  inc de              ; move to the next block in the list
+  inc b               ; increase the counter (so a match on the first one would be 0)
+  cp [hl]             ; a match?
+  jr nz, .convert_level_find
+
+  ld h, edit_map>>8   ; switch to edit_map temporarily
+  ld [hl], b
+  inc l
+  ld h, level_map>>8  ; switch back
+  jr nz, .convert_level_loop
+
+  call DrawLevelPreview
+
+  ; Display the objective
+  ldh a, [IsChipLevel]
+  or a
+  push af
+  jr z, .NotChipLevel
+  ld hl, .ChipText
+  jr .WasChipLevel
+.NotChipLevel:
+  ld hl, .DefeatText
+.WasChipLevel:
+  ld de, SCREEN1+2+17*32
+  call strcpy
+
+  pop af
+  jr z, .DontWriteChipCount
+  ld hl, SCREEN1+2+8+17*32
+  call PrintNybble
+.DontWriteChipCount:
+
+  ; Write level number
+  ld hl, .LevelText
+  ld de, SCREEN1+2
+  call strcpy
+  ldh a, [LevelNumber]
+  inc a ; level 0 displays as level 1
+  ld hl, SCREEN1+2+6
+  call PrintDecimalByte
+ 
+  ; Wait for an A press
+.wait:
+  call ScreenOn
+  call wait_vblank
+  call readkeys
+  ldh a, [KeyNew]
+  and KEY_A
+  jr z, .wait
+
+  call wait_vblank
+  call ScreenOff
+  jp MainInit
+
+.LevelText:
+  db "Level",0
+.ChipText:
+  db "Collect ## chips",0
+.DefeatText:
+  db "Defeat enemies!",0
+
+; Print a number from 0 to 99
+; Uses a division by 10 so it's slower than PrintNybble
+PrintDecimalByte:
+  push bc
+  ld b, 0
+
+.div10:
+  cp 10
+  jr c, .done
+  sub 10
+  inc b
+  jr .div10
+.done:
+
+  ; Write the two digits
+  push af
+  ld a, b
+  or "0"
+  ld [hl+], a
+  pop af
+  or "0"
+  ld [hl+], a
+
+  pop bc
+  ret
+
