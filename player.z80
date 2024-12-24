@@ -202,10 +202,7 @@ RunPlayer:
   ldh a, [PlayerPXH]
   cp 15
   jr nz, .NoFixRight
-  ldh a, [PlayerPXL]
-  cp $e0
-  jr c, .NoFixRight
-  ld a, $e0
+  xor a
   ldh [PlayerPXL], a
 .NoFixRight:
 
