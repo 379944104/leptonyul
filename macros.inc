@@ -63,3 +63,8 @@ vram_bank_1: MACRO
   ld a, 1
   ldh [$ff4f], a
 ENDM
+
+sex: MACRO
+  rla
+  sbc a
+ENDM

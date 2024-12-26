@@ -558,9 +558,8 @@ ShowPreLevel:
   ldh a, [IsChipLevel]
   or a
   push af
-  jr z, .NotChipLevel
   ld hl, .ChipText
-  jr .WasChipLevel
+  jr nz, .WasChipLevel
 .NotChipLevel:
   ld hl, .DefeatText
 .WasChipLevel:

@@ -54,6 +54,7 @@ actor_pixelx = 13
 astate_normal = 0
 astate_stunned = 1
 astate_paused = 2
+astate_active = 3
 
 actor_size  = 16
 
@@ -134,10 +135,10 @@ ActorNumberLeft:
   ld [hl+], a
   ldh a, [ChipsNeeded]
   add a ; *2
-  or $80
+  or $80       ; tile number
   ld [hl+], a
-  xor a
-  ld [hl+], a
+  xor a        ; attribute
+  ld [hl], a
 
   jp ActorPoof.IncreaseTimer
 
@@ -245,7 +246,26 @@ ActorFlames:
   jp EnemyDespawnTimer
 
 ActorBottle:
-  ret
+  call EnemyGravity
+
+  call ActorScreenPositionOffset
+
+  ld h, sprites>>8
+  ldh a, [oam_ptr]
+  ld l, a
+  add 4
+  ldh [oam_ptr], a
+
+  ld a, b
+  ld [hl+], a
+  ld a, c
+  ld [hl+], a
+  ld a, $14   ; tile
+  ld [hl+], a
+  xor a       ; attribute
+  ld [hl+], a
+
+  jp EnemyDespawnTimer
 
 ActorChip:
   ld a, $10
@@ -596,10 +616,115 @@ ActorBallRoll:
   jp EnemyCommon
 
 ActorThwomp:
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  jr nz, .no_seek
+  ; ---------------------------------------
+  ; Drift over to the player's X
+  ; ---------------------------------------
+  ld hl, actor_pxh
+  add hl, de
+  ld c, [hl]
+  dec l
+  ldh a, [PlayerPXH]
+  call .drift
+
+  ; ---------------------------------------
+  ; Drift over to the player's Y
+  ; ---------------------------------------
+  ld hl, actor_pyh
+  add hl, de
+  ld c, [hl]
+  dec l
+  ldh a, [PlayerPYH]
+  sub 3
+  call .drift
+
+  ; Maybe get ready to start falling?
+  ld hl, actor_var1
+  add hl, de
+  inc [hl]
+  ld a, [hl]
+  and 127
+  jr nz, .did_seek
+  ; Start the pausing so it can then fall
+  ld hl, actor_state
+  add hl, de
+  ld [hl], astate_paused
+  inc l
+  ld [hl], 30 ; set timer
+
+  jp .did_seek
+  ; ---------------------------------------
+.no_seek:
+  ; Pause a bit before falling down
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl+]
+  cp astate_paused
+  jr nz, .not_paused
+
+  ldh a, [retraces]
+  rra
+  call nc, EnemyTurnAround
+
+  ; HL is now pointing at the timer  
+  ; decrease the timer
+  dec [hl]
+  jr nz, .did_seek
+
+  dec l
+  ld [hl], astate_active ; start falling
+  jr .did_seek
+.not_paused:
+
+
+  call EnemyFall
+  jr nc, .did_seek
+
+  ; Don't automatically cancel if stunned
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  dec a
+  jr z, .did_seek
+  ; Reset state
+  ld [hl], 0
+.did_seek:
+
   ld a, $64
   ld b, 0
   call DrawActor
   jp EnemyCommon
+
+.drift:
+  sub c
+
+  ; Multiply a bit
+  add a
+  add a
+  add a
+  ld c, a
+
+  ; Write new low X or Y
+  ld a, [hl]
+  add c
+  ld [hl+], a ; move pointer back to high
+
+  ; Sign extend
+  push af ; save the carry flag
+  ld a, c
+  sex
+  ld c, a
+  pop af
+
+  ; Write new high X or Y
+  ld a, [hl]
+  adc c
+  ld [hl], a
+  ret
 
 ActorMine:
   ld a, $6c
@@ -683,8 +808,8 @@ EnemyCommon:
   ld hl, actor_state
   add hl, de
   ld a, [hl+]
-  or a
-  jr z, .not_stunned ; Normal state
+  cp astate_stunned
+  jr nz, .not_stunned ; Normal state
   dec [hl]
   jr nz, .not_stunned
   dec l
@@ -1207,8 +1332,8 @@ EnemyGravity:
 
   ; Limit the speed
   ld a, b
-  and 128
-  jr nz, .GoingUp
+  rla
+  jr c, .GoingUp
   ld a, c
   cp $60
   blt .GoingUp
@@ -1439,6 +1564,7 @@ ActorPointers:
   dw ActorBottle
   dw ActorChip
   dw ActorKey
+; Selectable actors:
   dw ActorPlodder
   dw ActorSneaker
   dw ActorSpinner
@@ -1451,4 +1577,5 @@ ActorPointers:
   dw ActorBallRoll
   dw ActorThwomp
   dw ActorMine
+; End of selectable actors
   dw ActorNumberLeft
