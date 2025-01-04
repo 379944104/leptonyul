@@ -89,23 +89,51 @@ LVL_H_DIRT    = $C0
   ; mm mm ee ee cL
   ; m = map pointer, e = enemy list, c = chips needed, L = enemy limit
 LevelHeaders:
-  dw map1, SampleEnemyList
-  db $35
+  dw island, GoombasEnemyList
+  db $04
 
-  dw map2, SampleEnemyList
-  db $05
+  dw stairs, SpinnerEnemyList
+  db $54
 
-  dw map3, SampleEnemyList
-  db $05
+  dw island2, SneakerEnemyList
+  db $04
 
-  dw map4, SampleEnemyList
-  db $a5
+  dw burger, BurgerEnemyList
+  db $58
 
-  dw map5, SampleEnemyList
-  db $a5
+  dw zigzag, BallEnemyList
+  db $04
 
+  dw bird, OwlEnemyList
+  db $04
+
+  dw pillars, FireJumpEnemyList
+  db $04
+
+  dw twin_ladder, BurgerEnemyList
+  db $76
+
+  dw stairs, SampleEnemyList
+  db $04
+
+
+GoombasEnemyList:
+  db ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_PLODDER, 0
+SneakerEnemyList:
+  db ACTOR_SNEAKER, ACTOR_SNEAKER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SNEAKER, ACTOR_BURGER, 0
+SpinnerEnemyList:
+  db ACTOR_SPINNER, 0
+BurgerEnemyList:
+  db ACTOR_BURGER, 0
+BallEnemyList:
+  db ACTOR_BALL_ROLL, ACTOR_PLODDER, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_PLODDER, ACTOR_SNEAKER, 0
+OwlEnemyList:
+  db ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, 0
+FireJumpEnemyList:
+  db ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_THWOMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_THWOMP, 0
 
 SampleEnemyList:
+  db ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_THWOMP
   db ACTOR_FIRE_WALK, ACTOR_FIRE_WALK, ACTOR_FIRE_WALK, ACTOR_FIRE_WALK
   db ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP
   db ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL
@@ -115,11 +143,18 @@ SampleEnemyList:
   db ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER
   db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
   db 0
-include "levels/map1.s"
-include "levels/map2.s"
-include "levels/map3.s"
-include "levels/map4.s"
-include "levels/map5.s"
+include "levels/bird.s"
+include "levels/burger.s"
+include "levels/cage.s"
+include "levels/grass_hill.s"
+include "levels/island.s"
+include "levels/island2.s"
+include "levels/ladder_platforms.s"
+include "levels/narrow.s"
+include "levels/pillars.s"
+include "levels/stairs.s"
+include "levels/twin_ladder.s"
+include "levels/zigzag.s"
 include "levels/title.s"
 
 ;--------------------------------

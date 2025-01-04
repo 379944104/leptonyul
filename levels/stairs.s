@@ -1,4 +1,4 @@
-map1:
+stairs:
   db LVL_V_CHECKER|$b, $0
   db LVL_V_CHECKER|$e, $f
   db LVL_H_CHECKER|$5, $1

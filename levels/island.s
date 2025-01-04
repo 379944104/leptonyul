@@ -1,4 +1,4 @@
-map2:
+island:
   db LVL_RECT|LVL_DIRT,    $95, $15
   db LVL_H_FENCE|$7, $24
   db LVL_H_PLAT|$3, $7b

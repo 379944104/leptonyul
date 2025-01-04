@@ -1,4 +1,4 @@
-map3:
+burger:
   db LVL_V_CHECKER|$c, $0
   db LVL_V_CHECKER|$b, $f
   db LVL_H_DIRT|$f, $d0

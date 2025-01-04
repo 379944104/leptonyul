@@ -54,7 +54,8 @@ actor_pixelx = 13
 astate_normal = 0
 astate_stunned = 1
 astate_paused = 2
-astate_active = 3
+astate_autopaused = 3 ; automatically unpauses
+astate_active = 4
 
 actor_size  = 16
 
@@ -680,11 +681,22 @@ ActorThwomp:
   jr .did_seek
 .not_paused:
 
+  ; Make sure falling into an infinite pit doesn't just loop
+  ld hl, actor_pyh
+  add hl, de
+  ld a, [hl]
+  cp 14
+  jr c, .not_pit
+  ld hl, actor_state
+  add hl, de
+  ld [hl], 0
+.not_pit:
 
   call EnemyFall
   jr nc, .did_seek
 
-  ; Don't automatically cancel if stunned
+  ; Cancel from hitting the ground,
+  ; But don't automatically cancel if stunned
   ld hl, actor_state
   add hl, de
   ld a, [hl]
@@ -727,6 +739,32 @@ ActorThwomp:
   ret
 
 ActorMine:
+  ld hl, actor_state
+  add hl, de
+  ld a, [hl]
+  or a
+  jr nz, .stunned
+
+  ld hl, actor_pxh
+  add hl, de
+  ld c, [hl]
+  dec l
+  ldh a, [PlayerPXH]
+  call ActorThwomp.drift
+
+  ld hl, actor_pyh
+  add hl, de
+  ld c, [hl]
+  dec l
+  ldh a, [PlayerPYH]
+  call ActorThwomp.drift
+
+  jr .not_stunned
+
+.stunned:
+  call EnemyFall
+.not_stunned:
+
   ld a, $6c
   ld b, 0
   call DrawActorWithoutFlip
@@ -808,8 +846,11 @@ EnemyCommon:
   ld hl, actor_state
   add hl, de
   ld a, [hl+]
+  cp astate_autopaused
+  jr z, .yes_stunned
   cp astate_stunned
   jr nz, .not_stunned ; Normal state
+.yes_stunned:
   dec [hl]
   jr nz, .not_stunned
   dec l
@@ -1131,7 +1172,7 @@ EnemyFlying:
   ; Also pause the enemy for a moment
   ld hl, actor_state
   add hl, de
-  ld [hl], astate_paused
+  ld [hl], astate_autopaused
   inc l
   ld [hl], 45
   ret

@@ -1,4 +1,4 @@
-map5:
+zigzag:
   db LVL_V_CHECKER|$b, $0
   db LVL_H_DIRT|$f, $e0
   db LVL_V_CHECKER|$4, $f
@@ -9,7 +9,7 @@ map5:
   db LVL_H_DIRT|$1, $5e
   db LVL_H_PLAT|$7, $b1
   db LVL_V_LADDER|$2, $b6
-  db LVL_H_PLAT|$7, $84
+  db LVL_H_PLAT|$6, $85
   db LVL_V_LADDER|$2, $88
   db LVL_H_GRASS|$3, $d0
   db LVL_H_FLOWER|$1, $da
@@ -22,6 +22,6 @@ map5:
   db LVL_RECT|LVL_DIRT,    $81, $20
   db LVL_RECT|LVL_DIRT,    $92, $10
   db LVL_DIRT,    $a3
-  db LVL_RECT|LVL_POLE,    $64, $10
   db LVL_RECT|LVL_POLE,    $1a, $60
+  db LVL_RECT|LVL_POLE,    $64, $40
   db LVL_DONE, $c8

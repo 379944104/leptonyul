@@ -1,4 +1,4 @@
-map4:
+twin_ladder:
   db LVL_H_DIRT|$6, $67
   db LVL_H_DIRT|$5, $e5
   db LVL_H_PLAT|$2, $a9
