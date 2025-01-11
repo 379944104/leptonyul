@@ -113,6 +113,20 @@ LevelHeaders:
   dw twin_ladder, BurgerEnemyList
   db $76
 
+  ; ???
+  dw stairs, SpinnerEnemyList
+  db $a8
+
+  dw grass_hill, ThwompEnemyList
+  db $05
+
+  dw ladder_platforms, OwlEnemyList2
+  db $05
+
+  dw cage, SneakerEnemyList
+  db $05
+
+
   dw stairs, SampleEnemyList
   db $04
 
@@ -127,10 +141,14 @@ BurgerEnemyList:
   db ACTOR_BURGER, 0
 BallEnemyList:
   db ACTOR_BALL_ROLL, ACTOR_PLODDER, ACTOR_BALL_ROLL, ACTOR_BALL_ROLL, ACTOR_PLODDER, ACTOR_SNEAKER, 0
+OwlEnemyList2:
+  db ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL
 OwlEnemyList:
   db ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, ACTOR_OWL, 0
 FireJumpEnemyList:
   db ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_THWOMP, ACTOR_FIRE_JUMP, ACTOR_FIRE_JUMP, ACTOR_THWOMP, 0
+ThwompEnemyList:
+  db ACTOR_THWOMP, ACTOR_PLODDER, ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_PLODDER, ACTOR_PLODDER, ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_THWOMP, 0
 
 SampleEnemyList:
   db ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_THWOMP, ACTOR_THWOMP
@@ -143,18 +161,18 @@ SampleEnemyList:
   db ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER, ACTOR_SPINNER
   db ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER, ACTOR_BURGER
   db 0
-include "levels/bird.s"
-include "levels/burger.s"
+include "levels/bird.s" ;
+include "levels/burger.s" ;
 include "levels/cage.s"
 include "levels/grass_hill.s"
-include "levels/island.s"
-include "levels/island2.s"
+include "levels/island.s" ;
+include "levels/island2.s" ;
 include "levels/ladder_platforms.s"
 include "levels/narrow.s"
 include "levels/pillars.s"
-include "levels/stairs.s"
-include "levels/twin_ladder.s"
-include "levels/zigzag.s"
+include "levels/stairs.s" ;
+include "levels/twin_ladder.s" ;
+include "levels/zigzag.s" ;
 include "levels/title.s"
 
 ;--------------------------------
