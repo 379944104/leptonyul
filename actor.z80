@@ -454,9 +454,9 @@ ActorFireWalk:
   ld [hl+], a
 
   ; Y velocity
-  ld [hl], low($-20)
+  ld [hl], low(-$20)
   inc l
-  ld [hl], high($-20)
+  ld [hl], high(-$20)
   inc l
   ; X and Y position
   call EnemyCopyPosition
@@ -1041,9 +1041,9 @@ EnemyCollideWithPlayer:
 
 .just_kill:
   ; Slight bump upwards
-  ld a, low($-50)
+  ld a, low(-$50)
   ldh [PlayerVYL], a
-  ld a, high($-50)
+  ld a, high(-$50)
   ldh [PlayerVYH], a
 
   ; Kill this enemy
